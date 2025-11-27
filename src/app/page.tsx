@@ -3,12 +3,7 @@
 import React from "react";
 import { Button, Paper, Text, Group, Box } from "@mantine/core";
 
-type PageProps = {
-  onLoginClick?: () => void;
-  onRegisterClick?: () => void;
-};
-
-export default function Page({ onLoginClick, onRegisterClick }: PageProps) {
+export default function Page() {
   return (
     <div
       className="min-h-screen flex flex-col"
@@ -55,17 +50,15 @@ export default function Page({ onLoginClick, onRegisterClick }: PageProps) {
             <Group mt="lg">
               <Button
                 variant="primary"
-                onClick={onLoginClick}
+                onClick={() => (window.location.href = "/login")}
                 className="px-6"
-                onClickCapture={() => (window.location.href = "/login")}
               >
                 Bejelentkezés
               </Button>
               <Button
                 variant="outline"
-                onClick={onRegisterClick}
+                onClick={() => (window.location.href = "/register")}
                 className="px-6"
-                onClickCapture={() => (window.location.href = "/register")}
               >
                 Regisztráció
               </Button>
