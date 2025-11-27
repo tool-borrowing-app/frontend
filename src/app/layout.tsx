@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript forceColorScheme="light" />
+        <ColorSchemeScript />
       </head>
       <body className="antialiased">
         <MantineProvider theme={theme}>{children}</MantineProvider>
