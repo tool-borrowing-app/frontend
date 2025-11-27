@@ -53,11 +53,6 @@ export default function Page() {
       className="min-h-screen flex flex-col"
       style={{ background: "var(--mantine-color-body)" }}
     >
-      {/* <div className="flex items-center px-6 py-4 border-b border-gray-200">
-        <span className="text-2xl mr-2">🛠</span>
-        <span className="text-xl font-semibold">ToolAirbnb</span>
-      </div> */}
-
       <main className="flex-1 flex items-center justify-center px-4 py-16">
         <Paper
           withBorder

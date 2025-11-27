@@ -26,11 +26,6 @@ export default function Page() {
       style={{ background: "var(--mantine-color-body)" }}
       className="min-h-screen flex flex-col"
     >
-      {/* <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-white">
-        <span className="text-2xl mr-2">🛠</span>
-        <span className="text-xl font-semibold">ToolAirbnb</span>
-      </div> */}
-
       <main className="flex-1 flex items-center justify-center px-4">
         <Paper
           withBorder
