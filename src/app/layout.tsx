@@ -9,8 +9,8 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 
 export const metadata: Metadata = {
-  title: "Next App Mantine Tailwind Template",
-  description: "Next App Mantine Tailwind Template",
+  title: "ToolAirbnb",
+  description: "ToolAirbnb - your trusted rental companion",
 };
 
 export default function RootLayout({
