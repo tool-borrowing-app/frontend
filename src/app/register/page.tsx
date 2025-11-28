@@ -10,6 +10,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { RegisterPayload, registerUser } from "@/apiClient/modules/auth";
 
 export default function Page() {
   const form = useForm({
@@ -43,9 +44,28 @@ export default function Page() {
     },
   });
 
-  const handleSubmit = (values: typeof form.values) => {
-    // ide jönne az API hívás
-    console.log("Regisztrációs adatok:", values);
+  const handleSubmit = async (values: typeof form.values) => {
+    const payload: RegisterPayload = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      password: values.password,
+      email: values.email,
+      phoneNumber: values.phone,
+      postalCode: values.zip,
+      city: values.city,
+      streetAddress: values.address,
+    };
+
+    const res = await registerUser(payload);
+
+    console.log(res);
+
+    if (!res.ok) {
+      console.log("error");
+      return;
+    }
+
+    console.log("register success");
   };
 
   return (
