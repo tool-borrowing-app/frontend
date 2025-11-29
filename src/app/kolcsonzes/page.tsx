@@ -96,8 +96,8 @@ export default function Page() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<string | null>("name-asc");
-  const [from, setFrom] = useState<Date | null>(null);
-  const [to, setTo] = useState<Date | null>(null);
+  const [from, setFrom] = useState<string | null>(null);
+  const [to, setTo] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const categories = Array.from(new Set(TOOLS.map((t) => t.category)));
@@ -115,11 +115,13 @@ export default function Page() {
     }
 
     if (from) {
-      items = items.filter((t) => t.availableTo >= from);
+      const fromDate = new Date(from);
+      items = items.filter((t) => t.availableTo >= fromDate);
     }
 
     if (to) {
-      items = items.filter((t) => t.availableFrom <= to);
+      const toDate = new Date(to);
+      items = items.filter((t) => t.availableFrom <= toDate);
     }
 
     switch (sort) {
