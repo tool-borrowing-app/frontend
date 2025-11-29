@@ -11,8 +11,17 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { RegisterPayload, registerUser } from "@/apiClient/modules/auth";
+import axios from "axios";
 
 export default function Page() {
+  const [registerSuccessful, setRegisterSuccessful] = React.useState(false);
+  const [isRegisterRequestInProgress, setIsRegisterRequestInProgress] =
+    React.useState(false);
+
+  const [errorMessage, setErrorMessage] = React.useState<string | undefined>(
+    undefined,
+  );
+
   const form = useForm({
     initialValues: {
       lastName: "",
@@ -45,6 +54,9 @@ export default function Page() {
   });
 
   const handleSubmit = async (values: typeof form.values) => {
+    setIsRegisterRequestInProgress(true);
+    setErrorMessage(undefined);
+
     const payload: RegisterPayload = {
       firstName: values.firstName,
       lastName: values.lastName,
@@ -56,16 +68,38 @@ export default function Page() {
       streetAddress: values.address,
     };
 
-    const res = await registerUser(payload);
+    try {
+      const res = await registerUser(payload);
 
-    console.log(res);
+      console.log(res);
+      setRegisterSuccessful(true);
 
-    if (!res.ok) {
-      console.log("error");
-      return;
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 3000);
+    } catch (error) {
+      console.error("Registration failed:", error);
+
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data as
+          | { error?: string; message?: string }
+          | undefined;
+
+        setErrorMessage(
+          data?.error ??
+            data?.message ??
+            "Ismeretlen hiba történt a regisztráció során",
+        );
+      } else {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Váratlan hiba történt a regisztráció során",
+        );
+      }
+    } finally {
+      setIsRegisterRequestInProgress(false);
     }
-
-    console.log("register success");
   };
 
   return (
@@ -166,11 +200,23 @@ export default function Page() {
             />
 
             <div className="pt-2 flex justify-center">
-              <Button type="submit" className="px-8">
+              <Button
+                type="submit"
+                className="px-8"
+                disabled={registerSuccessful || isRegisterRequestInProgress}
+              >
                 Regisztráció
               </Button>
             </div>
           </form>
+          {registerSuccessful && (
+            <div className="mt-4 text-green-600 text-center">
+              Sikeres regisztráció!
+            </div>
+          )}
+          {errorMessage && (
+            <div className="mt-4 text-red-600 text-center">{errorMessage}</div>
+          )}
         </Paper>
       </main>
 

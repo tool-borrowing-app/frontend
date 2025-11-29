@@ -12,6 +12,5 @@ export type RegisterPayload = {
 };
 
 export async function registerUser(payload: RegisterPayload) {
-  const res = await apiClient.post("/auth/register", payload);
-  return res.data;
+  return await apiClient.post("/auth/register", payload);
 }
