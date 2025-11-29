@@ -30,3 +30,7 @@ export async function loginUser({
 export async function fetchProfile() {
   return await apiClient.get("/auth/profile");
 }
+
+export async function logoutUser() {
+  return await apiClient.post("/auth/logout", {});
+}

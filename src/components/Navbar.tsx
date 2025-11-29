@@ -5,12 +5,14 @@ import React from "react";
 import { Paper, Group, Button } from "@mantine/core";
 import Link from "next/link";
 import { useProfile } from "@/contexts/ProfileContext";
+import { logoutUser } from "@/apiClient/modules/auth";
 
 export function Navbar() {
-  const { user } = useProfile();
+  const { user, refresh } = useProfile();
 
   const handleLogout = async () => {
-    // TODO implement logout functionality
+    await logoutUser();
+    await refresh();
   };
 
   return (

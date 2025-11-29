@@ -29,6 +29,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = async () => {
     setLoading(true);
+    setUser(undefined);
     try {
       const res = await fetchProfile();
       console.log("Fetched profile:", res);
