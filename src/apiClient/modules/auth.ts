@@ -26,3 +26,7 @@ export async function loginUser({
     password,
   });
 }
+
+export async function fetchProfile() {
+  return await apiClient.get("/auth/profile");
+}

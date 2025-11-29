@@ -1,14 +1,18 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React from "react";
 import { Paper, Group, Button } from "@mantine/core";
 import Link from "next/link";
+import { useProfile } from "@/contexts/ProfileContext";
 
-type NavbarProps = {
-  showAuthButtons?: boolean;
-};
+export function Navbar() {
+  const { user } = useProfile();
 
-export function Navbar({ showAuthButtons = true }: NavbarProps) {
+  const handleLogout = async () => {
+    // TODO implement logout functionality
+  };
+
   return (
     <Paper
       withBorder
@@ -21,7 +25,7 @@ export function Navbar({ showAuthButtons = true }: NavbarProps) {
         <span className="text-xl font-semibold">ToolAirbnb</span>
       </Link>
 
-      {showAuthButtons && (
+      {!user ? (
         <Group>
           <Button variant="primary" component={Link} href="/login">
             Bejelentkezés
@@ -29,6 +33,13 @@ export function Navbar({ showAuthButtons = true }: NavbarProps) {
 
           <Button variant="outline" component={Link} href="/register">
             Regisztráció
+          </Button>
+        </Group>
+      ) : (
+        <Group>
+          <span>Üdv: {(user as any).firstName}!</span>
+          <Button variant="primary" onClick={() => handleLogout()}>
+            Logout
           </Button>
         </Group>
       )}
