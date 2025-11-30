@@ -7,6 +7,7 @@ import {
 import theme from "./theme";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { ProfileProvider } from "@/contexts/ProfileContext";
 
 export const metadata: Metadata = {
   title: "Next App Mantine Tailwind Template",
@@ -25,8 +26,10 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <MantineProvider theme={theme}>
-          <Navbar />
-          {children}
+          <ProfileProvider>
+            <Navbar />
+            {children}
+          </ProfileProvider>
         </MantineProvider>
       </body>
     </html>

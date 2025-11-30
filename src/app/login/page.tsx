@@ -3,8 +3,14 @@
 import React from "react";
 import { TextInput, PasswordInput, Button, Paper, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { loginUser } from "@/apiClient/modules/auth";
+import axios from "axios";
 
 export default function Page() {
+  const [errorMessage, setErrorMessage] = React.useState<string | undefined>(
+    undefined,
+  );
+
   const form = useForm({
     initialValues: {
       email: "",
@@ -17,10 +23,35 @@ export default function Page() {
     },
   });
 
-  const handleSubmit = (values: typeof form.values) => {
-    // ide jön az API hívás
-    console.log("Login adatok:", values);
+  const handleSubmit = async (values: typeof form.values) => {
+    setErrorMessage(undefined);
+    try {
+      const res = await loginUser({
+        email: values.email,
+        password: values.password,
+      });
+
+      console.log("Login response:", res);
+
+      // redirect to homepage on successful login
+      window.location.href = "/";
+    } catch (err: unknown) {
+      console.error("Login failed:", err);
+
+      let msg = "Bejelentkezés sikertelen";
+
+      if (axios.isAxiosError(err)) {
+        const data = err.response?.data as
+          | { error?: string; message?: string }
+          | undefined;
+
+        msg = data?.error ?? data?.message ?? msg;
+      }
+
+      setErrorMessage(msg);
+    }
   };
+
   return (
     <div
       style={{ background: "var(--mantine-color-body)" }}
@@ -62,7 +93,7 @@ export default function Page() {
                 type="button"
                 className="text-sm underline text-blue-600"
                 onClick={() => {
-                  // ide jöhet majd a "elfelejtett jelszó" navigáció
+                  // TODO: "elfelejtett jelszó"
                   console.log("Elfelejtett jelszó link");
                 }}
               >
@@ -75,6 +106,11 @@ export default function Page() {
                 Bejelentkezés
               </Button>
             </div>
+            {errorMessage && (
+              <div className="text-red-600 text-center mb-4">
+                {errorMessage}
+              </div>
+            )}
           </form>
         </Paper>
       </main>
