@@ -8,6 +8,7 @@ import theme from "./theme";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import SubNavbar from "@/components/SubNavbar";
 
 export const metadata: Metadata = {
   title: "ToolAirbnb",
@@ -28,6 +29,7 @@ export default function RootLayout({
         <MantineProvider theme={theme}>
           <ProfileProvider>
             <Navbar />
+            <SubNavbar />
             {children}
           </ProfileProvider>
         </MantineProvider>
