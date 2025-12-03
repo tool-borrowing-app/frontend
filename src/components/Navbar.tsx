@@ -39,7 +39,10 @@ export function Navbar() {
         </Group>
       ) : (
         <Group>
-          <span>Üdv: {(user as any).firstName}!</span>
+          <span className="mr-8">
+            <b>Bejelentkezve: </b>
+            {(user as any).firstName} {(user as any).lastName}
+          </span>
           <Button variant="primary" onClick={() => handleLogout()}>
             Logout
           </Button>
