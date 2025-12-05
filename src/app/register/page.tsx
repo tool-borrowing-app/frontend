@@ -10,8 +10,9 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { RegisterPayload, registerUser } from "@/apiClient/modules/auth";
+import { registerUser } from "@/apiClient/modules/auth";
 import axios from "axios";
+import { RegisterPayload } from "@/apiClient/types/auth.types";
 
 export default function Page() {
   const [registerSuccessful, setRegisterSuccessful] = React.useState(false);
