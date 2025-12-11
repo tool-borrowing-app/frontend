@@ -12,7 +12,7 @@ export default function SubNavbar() {
   const navItems = [
     { label: "Kölcsönzés", href: "/kolcsonzes" },
     { label: "Kölcsönzéseim", href: "/kolcsonzeseim" },
-    { label: "Eszközök", href: "/eszkozok" },
+    { label: "Eszközeim", href: "/eszkozeim" },
     { label: "Aktivitás", href: "/aktivitás" },
   ];
 
