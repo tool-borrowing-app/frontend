@@ -21,14 +21,54 @@ import {
   IconTrash,
   IconUpload,
 } from "@tabler/icons-react";
+import { uploadTool } from "../../../apiClient/modules/tool";
+import type { UploadToolPayload } from "../../../apiClient/types/tool.types";
+
+const CATEGORY_MAPPING: Record<string, string> = {
+  DRILL: "Fúrógép",
+  SAW: "Fűrész",
+  GRINDER: "Csiszoló",
+  HAMMER: "Kalapács",
+  SCREWDRIVER_SET: "Csavarhúzó készlet",
+  WRENCH_SET: "Villáskulcs készlet",
+  SANDER: "Csiszológép",
+  LADDER: "Létra",
+  PRESSURE_WASHER: "Magasnyomású mosó",
+};
+
+const STATUS_MAPPING: Record<string, string> = {
+  ACTIVE: "Aktív",
+  INACTIVE: "Inaktív",
+};
+
+const CATEGORY_OPTIONS = Object.entries(CATEGORY_MAPPING).map(
+  ([code, name]) => ({
+    value: code,
+    label: name,
+  }),
+);
+
+const STATUS_OPTIONS = Object.entries(STATUS_MAPPING).map(([code, name]) => ({
+  value: code,
+  label: name,
+}));
 
 export default function AddToolPage() {
   const router = useRouter();
 
   type PreviewImage = { id: string; src: string; file: File };
   const [images, setImages] = useState<PreviewImage[]>([]);
+  const imagesRef = useRef<PreviewImage[]>([]);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [status, setStatus] = useState("ACTIVE");
+  const [price, setPrice] = useState<number | undefined>(undefined);
+  const [deposit, setDeposit] = useState<number | undefined>(undefined);
+  const [description, setDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const handleFiles = useCallback((fileList: FileList | null) => {
     if (!fileList) return;
@@ -84,10 +124,71 @@ export default function AddToolPage() {
   };
 
   useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
+  useEffect(() => {
     return () => {
-      images.forEach((img) => URL.revokeObjectURL(img.src));
+      imagesRef.current.forEach((img) => URL.revokeObjectURL(img.src));
     };
   }, []);
+
+  const fileToBase64 = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(fr.result as string);
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+
+  const handleUpload = async () => {
+    if (
+      !title ||
+      !category ||
+      !status ||
+      price == null ||
+      deposit == null ||
+      !description
+    ) {
+      alert("Kérlek tölts ki minden mezőt és adj meg legalább egy képet.");
+      return;
+    }
+    if (images.length === 0) {
+      alert("Adj meg legalább egy képet.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const imagesBase64 = await Promise.all(
+        images.map((i) => fileToBase64(i.file)),
+      );
+      const payload: UploadToolPayload = {
+        name: title,
+        description,
+        rentalPrice: price ?? undefined,
+        depositPrice: deposit ?? undefined,
+        lookupStatus: {
+          code: status,
+          name: STATUS_MAPPING[status as keyof typeof STATUS_MAPPING] || status,
+        },
+        lookupCategory: {
+          code: category,
+          name:
+            CATEGORY_MAPPING[category as keyof typeof CATEGORY_MAPPING] ||
+            category,
+        },
+        images: imagesBase64,
+      };
+      await uploadTool(payload);
+      router.push("/eszkozeim");
+    } catch (err) {
+      console.error("upload failed", err);
+      alert("Feltöltés sikertelen");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -112,21 +213,34 @@ export default function AddToolPage() {
 
           <div className="grid gap-y-4 gap-x-6 md:grid-cols-[170px,1fr]">
             <Text className="md:self-center font-medium">Eszköz neve:</Text>
-            <TextInput placeholder="Eszköz neve" />
+            <TextInput
+              placeholder="Eszköz neve"
+              value={title}
+              onChange={(e) => setTitle(e.currentTarget.value)}
+            />
 
             <Text className="md:self-center font-medium">
               Eszköz kategóriája:
             </Text>
             <Select
-              data={["Porszívó", "Fúrógép", "Kerti eszköz", "Egyéb"]}
+              data={CATEGORY_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
               placeholder="Válassz kategóriát"
+              value={category}
+              onChange={(v) => setCategory(v ?? "")}
             />
 
             <Text className="md:self-center font-medium">Státusza:</Text>
             <Select
-              data={["ELÉRHETŐ", "FOGLALT", "INAKTÍV"]}
+              data={STATUS_OPTIONS.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
               placeholder="Válaszd ki a státuszt"
-              defaultValue="ELÉRHETŐ"
+              value={status}
+              onChange={(v) => setStatus(v ?? "")}
             />
 
             <Text className="md:self-center font-medium">Ára (Ft/nap):</Text>
@@ -135,6 +249,10 @@ export default function AddToolPage() {
               thousandSeparator=" "
               min={0}
               step={500}
+              value={price}
+              onChange={(val) =>
+                setPrice(typeof val === "number" ? val : undefined)
+              }
             />
 
             <Text className="md:self-center font-medium">Kaució (Ft):</Text>
@@ -143,12 +261,18 @@ export default function AddToolPage() {
               thousandSeparator=" "
               min={0}
               step={1000}
+              value={deposit}
+              onChange={(val) =>
+                setDeposit(typeof val === "number" ? val : undefined)
+              }
             />
 
             <Text className="font-medium mt-1">Leírás:</Text>
             <Textarea
               minRows={4}
               placeholder="Rövid leírás az eszközről, állapotáról, tartozékokról…"
+              value={description}
+              onChange={(e) => setDescription(e.currentTarget.value)}
             />
 
             <Text className="font-medium mt-1">Képek:</Text>
@@ -263,10 +387,16 @@ export default function AddToolPage() {
           </div>
 
           <Group justify="flex-end" mt="xl">
-            <Button variant="outline" color="gray">
+            <Button
+              variant="outline"
+              color="gray"
+              onClick={() => router.back()}
+            >
               Mégse
             </Button>
-            <Button>Mentés</Button>
+            <Button onClick={handleUpload} loading={submitting}>
+              Mentés
+            </Button>
           </Group>
         </Paper>
       </main>
