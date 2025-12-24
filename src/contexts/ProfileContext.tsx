@@ -11,20 +11,19 @@ type UserProfile = {
 };
 
 type ProfileContextType = {
-  user: UserProfile | null | unknown;
+  user: UserProfile | undefined;
   loading: boolean;
   refresh: () => Promise<void>;
 };
 
 const ProfileContext = createContext<ProfileContextType>({
-  user: null,
+  user: undefined,
   loading: true,
   refresh: async () => {},
 });
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  // TODO fix this type:
-  const [user, setUser] = useState<UserProfile | null | unknown>(null);
+  const [user, setUser] = useState<UserProfile | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   const refreshProfile = async () => {
@@ -38,12 +37,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       setUser(data);
     } catch {
-      setUser(null);
+      setUser(undefined);
     }
     setLoading(false);
   };
-
-  console.log("ProfileContext user:", user);
 
   useEffect(() => {
     refreshProfile();
