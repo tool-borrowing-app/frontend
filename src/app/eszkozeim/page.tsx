@@ -339,24 +339,6 @@ export default function Page() {
                   </Paper>
                 </Box>
               </Tabs.Panel>
-
-              <Tabs.Panel value="kolcsonzes" pt="md">
-                <Text c="dimmed" size="sm">
-                  Navigáció placeholder.
-                </Text>
-              </Tabs.Panel>
-
-              <Tabs.Panel value="kolcsonzeseim" pt="md">
-                <Text c="dimmed" size="sm">
-                  Navigáció placeholder.
-                </Text>
-              </Tabs.Panel>
-
-              <Tabs.Panel value="aktivitas" pt="md">
-                <Text c="dimmed" size="sm">
-                  Navigáció placeholder.
-                </Text>
-              </Tabs.Panel>
             </Tabs>
           </Paper>
         )}
