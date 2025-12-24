@@ -44,7 +44,7 @@ export function Navbar() {
             {(user as any).firstName} {(user as any).lastName}
           </span>
           <Button variant="primary" onClick={() => handleLogout()}>
-            Logout
+            Kijelentkezés
           </Button>
         </Group>
       )}
