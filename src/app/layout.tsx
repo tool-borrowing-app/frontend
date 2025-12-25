@@ -11,6 +11,7 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import SubNavbar from "@/components/SubNavbar";
 import "@mantine/notifications/styles.css";
 import { Notifications } from "@mantine/notifications";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "ToolAirbnb",
@@ -33,7 +34,7 @@ export default function RootLayout({
           <ProfileProvider>
             <Navbar />
             <SubNavbar />
-            {children}
+            <Suspense>{children}</Suspense>
           </ProfileProvider>
         </MantineProvider>
       </body>
