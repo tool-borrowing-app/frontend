@@ -8,13 +8,12 @@ import {
   Text,
   SimpleGrid,
   Group,
-  Badge,
   Pagination,
   Stack,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { getAllTools } from "@/apiClient/modules/tool";
-import { ToolDto } from "../eszkozeim/page";
+import type { ToolDto } from "../eszkozeim/page";
 
 const PAGE_SIZE = 8;
 
@@ -22,22 +21,33 @@ export default function Page() {
   const [search, setSearch] = useState<string>("");
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<string | null>("name-asc");
-  const [from, setFrom] = useState<string | null>(null);
-  const [to, setTo] = useState<string | null>(null);
+  const [from, setFrom] = useState<Date | null>(null);
+  const [to, setTo] = useState<Date | null>(null);
   const [page, setPage] = useState(1);
 
   const [allTools, setAllTools] = useState<ToolDto[]>([]);
 
-  const fetchTools = async () => {
-    const result = await getAllTools();
-    setAllTools(result.data);
-  };
-
   useEffect(() => {
+    const fetchTools = async () => {
+      const result = await getAllTools();
+      setAllTools(result.data);
+    };
     fetchTools();
   }, []);
 
-  const categories = Array.from(new Set(allTools.map((t) => t.category)));
+  const categoryOptions = useMemo(() => {
+    const byCode = new Map<string, string>();
+
+    allTools.forEach((t) => {
+      const code = t.category?.code;
+      const name = t.category?.name;
+      if (code && name) byCode.set(code, name);
+    });
+
+    return Array.from(byCode.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, "hu"));
+  }, [allTools]);
 
   const filtered = useMemo(() => {
     let items = [...allTools];
@@ -48,7 +58,7 @@ export default function Page() {
     }
 
     if (category) {
-      items = items.filter((t) => t.category === category);
+      items = items.filter((t) => t.category?.code === category);
     }
 
     switch (sort) {
@@ -69,19 +79,22 @@ export default function Page() {
     return items;
   }, [search, category, sort, from, to, allTools]);
 
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [pageItems, setPageItems] = useState<ToolDto[]>([]);
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
+    [filtered.length],
+  );
 
+  // keep page valid when filters shrink result set
   useEffect(() => {
-    setTotalPages(Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)));
-    setPageItems(filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
-    setPage(1);
+    if (page > totalPages) setPage(1);
+  }, [page, totalPages]);
+
+  const pageItems = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, page]);
 
-  // reset to first page when filters change and page would be out of range
-  if (page > totalPages) {
-    setPage(1);
-  }
+  console.log({ allTools });
 
   return (
     <div
@@ -111,10 +124,7 @@ export default function Page() {
             </Text>
             <Select
               placeholder="Összes kategória"
-              data={categories.map((c) => ({
-                value: c?.name ?? "",
-                label: c?.name ?? "",
-              }))}
+              data={categoryOptions}
               value={category}
               onChange={(value) => {
                 setCategory(value);
@@ -147,7 +157,7 @@ export default function Page() {
             <DateInput
               value={from}
               onChange={(value) => {
-                setFrom(value);
+                setFrom(value ? new Date(value) : null);
                 setPage(1);
               }}
               label=" -tól"
@@ -156,7 +166,7 @@ export default function Page() {
             <DateInput
               value={to}
               onChange={(value) => {
-                setTo(value);
+                setTo(value ? new Date(value) : null);
                 setPage(1);
               }}
               label=" -ig"
@@ -199,9 +209,6 @@ export default function Page() {
                       {tool.rentalPrice.toLocaleString("hu-HU")} Ft-tól
                     </Text>
                   </div>
-                  <Badge size="xs" radius="sm" variant="light">
-                    {tool.category?.name}
-                  </Badge>
                 </Group>
               </Paper>
             ))}

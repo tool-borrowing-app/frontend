@@ -1,6 +1,5 @@
 "use client";
 
-import { deleteTool } from "@/apiClient/modules/tool";
 import { getToolsForUser } from "@/apiClient/modules/users";
 import { DeleteToolModal } from "@/components/modals/DeleteToolModal";
 import { useProfile } from "@/contexts/ProfileContext";
