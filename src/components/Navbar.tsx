@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
 import { Paper, Group, Button } from "@mantine/core";
 import Link from "next/link";
 import { useProfile } from "@/contexts/ProfileContext";

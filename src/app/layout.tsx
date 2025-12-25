@@ -9,7 +9,6 @@ import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import SubNavbar from "@/components/SubNavbar";
-import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import { Notifications } from "@mantine/notifications";
 
