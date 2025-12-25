@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Paper,
   TextInput,
@@ -13,97 +13,34 @@ import {
   Stack,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-
-type Tool = {
-  id: number;
-  name: string;
-  price: number;
-  category: string;
-  availableFrom: Date;
-  availableTo: Date;
-};
-
-const TOOLS: Tool[] = [
-  {
-    id: 1,
-    name: "Fúrógép",
-    price: 8000,
-    category: "Elektromos szerszám",
-    availableFrom: new Date("2024-09-10"),
-    availableTo: new Date("2024-09-20"),
-  },
-  {
-    id: 2,
-    name: "Porszívó",
-    price: 15000,
-    category: "Háztartás",
-    availableFrom: new Date("2024-09-11"),
-    availableTo: new Date("2024-09-25"),
-  },
-  {
-    id: 3,
-    name: "Csavarhúzó készlet",
-    price: 3000,
-    category: "Kéziszerszám",
-    availableFrom: new Date("2024-09-12"),
-    availableTo: new Date("2024-09-18"),
-  },
-  {
-    id: 4,
-    name: "Csiszológép",
-    price: 20000,
-    category: "Elektromos szerszám",
-    availableFrom: new Date("2024-09-13"),
-    availableTo: new Date("2024-09-30"),
-  },
-  {
-    id: 5,
-    name: "Varrógép",
-    price: 17000,
-    category: "Háztartás",
-    availableFrom: new Date("2024-09-10"),
-    availableTo: new Date("2024-09-19"),
-  },
-  {
-    id: 6,
-    name: "Fűnyíró",
-    price: 10000,
-    category: "Kerti eszköz",
-    availableFrom: new Date("2024-09-14"),
-    availableTo: new Date("2024-09-21"),
-  },
-  {
-    id: 7,
-    name: "Utánfutó",
-    price: 50000,
-    category: "Egyéb",
-    availableFrom: new Date("2024-09-09"),
-    availableTo: new Date("2024-09-30"),
-  },
-  {
-    id: 8,
-    name: "Gőztisztító",
-    price: 40000,
-    category: "Háztartás",
-    availableFrom: new Date("2024-09-15"),
-    availableTo: new Date("2024-09-28"),
-  },
-];
+import { getAllTools } from "@/apiClient/modules/tool";
+import { ToolDto } from "../eszkozeim/page";
 
 const PAGE_SIZE = 8;
 
 export default function Page() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState<string>("");
   const [category, setCategory] = useState<string | null>(null);
   const [sort, setSort] = useState<string | null>("name-asc");
   const [from, setFrom] = useState<string | null>(null);
   const [to, setTo] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
-  const categories = Array.from(new Set(TOOLS.map((t) => t.category)));
+  const [allTools, setAllTools] = useState<ToolDto[]>([]);
+
+  const fetchTools = async () => {
+    const result = await getAllTools();
+    setAllTools(result.data);
+  };
+
+  useEffect(() => {
+    fetchTools();
+  }, []);
+
+  const categories = Array.from(new Set(allTools.map((t) => t.category)));
 
   const filtered = useMemo(() => {
-    let items = [...TOOLS];
+    let items = [...allTools];
 
     if (search.trim().length > 0) {
       const q = search.toLowerCase();
@@ -114,16 +51,6 @@ export default function Page() {
       items = items.filter((t) => t.category === category);
     }
 
-    if (from) {
-      const fromDate = new Date(from);
-      items = items.filter((t) => t.availableTo >= fromDate);
-    }
-
-    if (to) {
-      const toDate = new Date(to);
-      items = items.filter((t) => t.availableFrom <= toDate);
-    }
-
     switch (sort) {
       case "name-asc":
         items.sort((a, b) => a.name.localeCompare(b.name));
@@ -132,18 +59,24 @@ export default function Page() {
         items.sort((a, b) => b.name.localeCompare(a.name));
         break;
       case "price-asc":
-        items.sort((a, b) => a.price - b.price);
+        items.sort((a, b) => a.rentalPrice - b.rentalPrice);
         break;
       case "price-desc":
-        items.sort((a, b) => b.price - a.price);
+        items.sort((a, b) => b.rentalPrice - a.rentalPrice);
         break;
     }
 
     return items;
-  }, [search, category, sort, from, to]);
+  }, [search, category, sort, from, to, allTools]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [pageItems, setPageItems] = useState<ToolDto[]>([]);
+
+  useEffect(() => {
+    setTotalPages(Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)));
+    setPageItems(filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE));
+    setPage(1);
+  }, [filtered, page]);
 
   // reset to first page when filters change and page would be out of range
   if (page > totalPages) {
@@ -156,7 +89,6 @@ export default function Page() {
       style={{ background: "var(--mantine-color-body)" }}
     >
       <main className="flex-1 flex px-6 py-6 gap-6">
-        {/* Left sidebar */}
         <Paper
           withBorder
           radius="md"
@@ -179,7 +111,10 @@ export default function Page() {
             </Text>
             <Select
               placeholder="Összes kategória"
-              data={categories.map((c) => ({ value: c, label: c }))}
+              data={categories.map((c) => ({
+                value: c?.name ?? "",
+                label: c?.name ?? "",
+              }))}
               value={category}
               onChange={(value) => {
                 setCategory(value);
@@ -234,9 +169,8 @@ export default function Page() {
           </div>
         </Paper>
 
-        {/* Tool grid */}
         <div className="flex-1 flex flex-col">
-          <SimpleGrid cols={4} spacing="lg" className="flex-1">
+          <SimpleGrid cols={4} spacing="lg">
             {pageItems.map((tool) => (
               <Paper
                 key={tool.id}
@@ -244,20 +178,29 @@ export default function Page() {
                 radius="md"
                 className="p-3 flex flex-col gap-2"
               >
-                <div className="w-full aspect-[4/3] bg-gray-200 rounded-md flex items-center justify-center text-[11px] text-gray-600">
-                  kép#{tool.id}
-                </div>
+                {tool?.imageUrls?.length !== undefined &&
+                tool.imageUrls.length > 0 ? (
+                  <img
+                    src={tool.imageUrls[0]}
+                    alt={tool.name}
+                    className="w-full aspect-[4/3] object-cover rounded-md"
+                  />
+                ) : (
+                  <div className="w-full aspect-[4/3] bg-gray-200 rounded-md flex items-center justify-center text-[11px] text-gray-600">
+                    kép#{tool.id}
+                  </div>
+                )}
                 <Group justify="space-between" align="flex-start" mt={4}>
                   <div>
                     <Text size="sm" fw={500}>
                       {tool.name}
                     </Text>
                     <Text size="xs" c="dimmed">
-                      {tool.price.toLocaleString("hu-HU")} Ft-tól
+                      {tool.rentalPrice.toLocaleString("hu-HU")} Ft-tól
                     </Text>
                   </div>
                   <Badge size="xs" radius="sm" variant="light">
-                    {tool.category}
+                    {tool.category?.name}
                   </Badge>
                 </Group>
               </Paper>
