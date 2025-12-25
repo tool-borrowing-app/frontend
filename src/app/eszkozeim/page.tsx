@@ -1,6 +1,8 @@
 "use client";
 
+import { deleteTool } from "@/apiClient/modules/tool";
 import { getToolsForUser } from "@/apiClient/modules/users";
+import { DeleteToolModal } from "@/components/modals/DeleteToolModal";
 import { useProfile } from "@/contexts/ProfileContext";
 import {
   ActionIcon,
@@ -19,7 +21,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import {
-  IconEye,
   IconPencil,
   IconPlus,
   IconSearch,
@@ -34,8 +35,8 @@ type LookupDto = {
   name?: string;
 };
 
-type ToolDto = {
-  id: string | number;
+export type ToolDto = {
+  id: string;
   name: string;
   description: string;
   rentalPrice: number;
@@ -83,6 +84,13 @@ export default function Page() {
   const [q, setQ] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  const [isDeleteToolModelOpen, setIsDeleteToolModelOpen] =
+    useState<boolean>(false);
+
+  const [selectedToolForDelete, setSelectedToolForDelete] = useState<
+    ToolDto | undefined
+  >(undefined);
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -302,14 +310,26 @@ export default function Page() {
                                       variant="subtle"
                                       color="red"
                                       onClick={() => {
-                                        // TODO: confirm modal + call delete endpoint
-                                        alert("TODO: törlés");
+                                        setIsDeleteToolModelOpen(true);
+                                        setSelectedToolForDelete(t);
                                       }}
                                       aria-label="Törlés"
                                     >
                                       <IconTrash size={16} />
                                     </ActionIcon>
                                   </Tooltip>
+                                  <DeleteToolModal
+                                    isDeleteToolModelOpen={
+                                      isDeleteToolModelOpen
+                                    }
+                                    setIsDeleteToolModelOpen={
+                                      setIsDeleteToolModelOpen
+                                    }
+                                    fetchTools={() => fetchTools()}
+                                    selectedToolIdForDelete={
+                                      selectedToolForDelete
+                                    }
+                                  />
                                 </Group>
                               </Table.Td>
                             </Table.Tr>
