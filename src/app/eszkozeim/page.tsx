@@ -176,12 +176,12 @@ export default function Page() {
   }, [q, categoryFilter, statusFilter]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="mx-auto max-w-6xl px-4 py-6">
         {user === undefined ? (
           <div className="text-center">Jelentkezz be először!</div>
         ) : (
-          <Paper withBorder radius="md" className="bg-white">
+          <Paper withBorder radius="md">
             <Tabs defaultValue="eszkozok" className="px-4 pt-3">
               <Tabs.Panel value="eszkozok" pt="md">
                 <Group justify="space-between" align="flex-start" wrap="wrap">
@@ -223,7 +223,7 @@ export default function Page() {
 
                 <Box mt="md">
                   <Paper withBorder radius="md" className="overflow-hidden">
-                    <div className="px-4 py-2 border-b bg-gray-50">
+                    <div className="px-4 py-2 border-b">
                       <Group justify="space-between" align="center">
                         <Text fw={600}>Eszközeim</Text>
                         {loading ? (
@@ -347,7 +347,7 @@ export default function Page() {
                       </Table.Tbody>
                     </Table>
 
-                    <div className="flex items-center justify-end gap-3 border-t bg-white px-4 py-2">
+                    <div className="flex items-center justify-end gap-3 border-t px-4 py-2">
                       <Pagination
                         value={Math.min(page, totalPages)}
                         onChange={setPage}

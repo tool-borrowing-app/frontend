@@ -9,6 +9,10 @@ export async function getAllTools() {
   return await apiClient.get("/tools");
 }
 
+export async function getToolById(id: string) {
+  return await apiClient.get(`/tools/${id}`);
+}
+
 export async function deleteTool(id: string) {
   return await apiClient.delete(`/tools/${id}`);
 }
