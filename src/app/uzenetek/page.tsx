@@ -22,12 +22,16 @@ export default function Page() {
     const fetchData = async () => {
       setMessageValue("");
       if (selectedConversationId) {
-        await getMessages(selectedConversationId);
+        const res = await getMessages(selectedConversationId);
+        setMessages(res.data);
+      } else {
+        setMessages([]);
       }
     };
 
     fetchData();
   }, [selectedConversationId]);
+
   const getAllConversations = async () => {
     const res = await fetchConversations();
     setAllConversations(res.data);
@@ -94,12 +98,53 @@ export default function Page() {
                   <Stack
                     style={{ flex: 1, overflowY: 'auto' }}
                     gap="xs"
-                    pr="sm" // space for scrollbar
+                    p="md"
                   >
-                    {/* Messages would be mapped here */}
-                    <Text size="sm" c="dimmed" ta="center" my="xl">
-                      Nincsenek még üzenetek. Kezdj el beszélgetni!
-                    </Text>
+                    {messages.map((msg, index) => {
+                      // Determine if the message was sent by the logged-in user
+                      const isMe = msg.sentBy.email === user?.email;
+
+                      return (
+                        <Group
+                          key={index}
+                          justify={isMe ? 'flex-end' : 'flex-start'}
+                          gap="xs"
+                        >
+                          {!isMe && (
+                            <Text size="xs" c="dimmed" mb={-5}>
+                              {msg.sentBy.firstName}
+                            </Text>
+                          )}
+
+                          <Box
+                            style={{
+                              maxWidth: '70%',
+                              padding: '8px 12px',
+                              borderRadius: '12px',
+                              backgroundColor: isMe
+                                ? 'var(--mantine-color-blue-filled)'
+                                : 'var(--mantine-color-gray-2)',
+                              color: isMe ? 'white' : 'black',
+                              // Simple logic to make the bubble corners look "chat-like"
+                              borderBottomRightRadius: isMe ? '4px' : '12px',
+                              borderBottomLeftRadius: !isMe ? '4px' : '12px',
+                            }}
+                          >
+                            <Text size="sm">{msg.text}</Text>
+
+                            <Text
+                              size="inset"
+                              fz={10}
+                              ta="right"
+                              opacity={0.7}
+                              mt={4}
+                            >
+                              {new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+                          </Box>
+                        </Group>
+                      );
+                    })}
                   </Stack>
 
                   {/* 3. Input Area at the bottom */}
