@@ -159,8 +159,13 @@ export default function Page() {
                     <Button
                       radius="md"
                       onClick={async () => {
-                        await sendMessage({ conversationId: selectedConversationId, text: messageValue } as unknown as SendMessageDto);
-                        setMessageValue("");
+                        const res = await sendMessage({ conversationId: selectedConversationId, text: messageValue } as unknown as SendMessageDto);
+                        console.log("res:::: ", res);
+                        if (res.status >= 200) {
+                          setMessageValue("");
+                          const res = await getMessages(selectedConversationId);
+                          setMessages(res.data);
+                        }
                       }}
                       disabled={messageValue === ""}
                     >
