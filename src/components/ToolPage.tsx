@@ -3,6 +3,7 @@
 
 import { getToolById } from "@/apiClient/modules/tool";
 import { ToolDto } from "@/app/eszkozeim/page";
+import { useProfile } from "@/contexts/ProfileContext";
 import {
   Badge,
   Button,
@@ -28,6 +29,7 @@ export function ToolPage({ id }: { id: string }) {
   const [tool, setTool] = useState<ToolDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const { user } = useProfile();
 
   const fetchTool = async () => {
     setLoading(true);
@@ -201,6 +203,13 @@ export function ToolPage({ id }: { id: string }) {
               >
                 Vissza
               </Button>
+              {tool.user?.email !== user?.email &&
+                <Button
+                  onClick={() => {console.log("toool: ", tool); console.log("user: ", user)}}
+                >
+                  Üzenet
+                </Button>
+              }
               <Button
                 onClick={() => router.push(`/foglalas/${id}`)}
                 className="w-32"

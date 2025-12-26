@@ -14,6 +14,7 @@ export default function SubNavbar() {
     { label: "Kölcsönzéseim", href: "/kolcsonzeseim" },
     { label: "Eszközeim", href: "/eszkozeim" },
     { label: "Aktivitás", href: "/aktivitás" },
+    { label: "Üzenetek", href: "/uzenetek" }
   ];
 
   const isSelected = (href: string) => {

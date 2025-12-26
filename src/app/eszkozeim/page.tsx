@@ -43,7 +43,15 @@ export type ToolDto = {
   status?: LookupDto | null;
   category?: LookupDto | null;
   imageUrls?: string[];
+  user?: UserDto | null;
 };
+
+export type UserDto = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  id: number;
+}
 
 function normalizeText(v: unknown) {
   return String(v ?? "")
