@@ -1,7 +1,7 @@
 "use client";
 
-import { fetchConversations } from "@/apiClient/modules/conversation";
-import { ConversationDto } from "@/apiClient/types/conversation.types";
+import { fetchConversations, sendMessage } from "@/apiClient/modules/conversation";
+import { ConversationDto, SendMessageDto } from "@/apiClient/types/conversation.types";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Button, Card, Container, Group, Stack, Image, Text, Grid, TextInput, Box } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ export default function Page() {
 
   const [allConversations, setAllConversations] = useState<ConversationDto[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>();
+  const [messageValue, setMessageValue] = useState<string>("");
   const { user } = useProfile();
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function Page() {
 
   return (
     <>üzenetek page
-      <Button onClick={() => { console.log("selected conversation ", selectedConversationId) }}>
+      <Button onClick={() => { console.log("msg val ", messageValue) }}>
         Debug
       </Button>
 
@@ -40,7 +41,10 @@ export default function Page() {
                     key={conversation.id}
                     withBorder
                     radius="md"
-                    onClick={() => setSelectedConversationId(conversation.id)}
+                    onClick={() => {
+                      setSelectedConversationId(conversation.id)
+                      setMessageValue("");
+                    }}
                     bg={isSelected ? "var(--mantine-color-blue-light)" : "white"}
                     style={{ cursor: "pointer", transition: "0.2s" }}
                   >
@@ -94,12 +98,16 @@ export default function Page() {
                       placeholder="Írj egy üzenetet..."
                       style={{ flex: 1 }}
                       radius="md"
-                    // value={messageValue} 
-                    // onChange={(e) => setMessageValue(e.currentTarget.value)}
+                      value={messageValue}
+                      onChange={(e) => setMessageValue(e.currentTarget.value)}
                     />
                     <Button
                       radius="md"
-                      onClick={() => console.log("Sending message...")}
+                      onClick={async () => {
+                        await sendMessage({ conversationId: selectedConversationId, text: messageValue } as unknown as SendMessageDto);
+                        setMessageValue("");
+                      }}
+                      disabled={messageValue === ""}
                     >
                       Küldés
                     </Button>

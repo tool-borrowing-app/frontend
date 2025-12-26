@@ -10,3 +10,8 @@ export type ConversationDto = {
   renter: UserDto;
   lender: UserDto;
 }
+
+export type SendMessageDto = {
+  conversationId: number;
+  text: string;
+}

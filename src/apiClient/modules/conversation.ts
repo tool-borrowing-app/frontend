@@ -1,5 +1,5 @@
 import { apiClient } from "../client";
-import { StartConversationPayload } from "../types/conversation.types";
+import { SendMessageDto, StartConversationPayload } from "../types/conversation.types";
 
 
 export async function fetchConversations() {
@@ -8,4 +8,8 @@ export async function fetchConversations() {
 
 export async function createConversation(payload: StartConversationPayload) {
   return await apiClient.post("/conversations", payload);
+}
+
+export async function sendMessage(payload: SendMessageDto) {
+  return await apiClient.post("/messages", payload);
 }
