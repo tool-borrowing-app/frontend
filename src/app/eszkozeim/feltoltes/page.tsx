@@ -301,7 +301,7 @@ export default function AddToolPage() {
                   </div>
                 ) : images.length === 1 ? (
                   <div className="w-full h-full flex items-center justify-center">
-                    <div className="relative w-48 h-64 rounded-md overflow-hidden border bg-gray-50">
+                    <div className="relative h-64 rounded-md overflow-hidden border bg-gray-50">
                       <img
                         src={images[0].src}
                         alt="preview"

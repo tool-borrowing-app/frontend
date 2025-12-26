@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
 import { Paper, Group, Button } from "@mantine/core";
 import Link from "next/link";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -44,7 +43,7 @@ export function Navbar() {
             {(user as any).firstName} {(user as any).lastName}
           </span>
           <Button variant="primary" onClick={() => handleLogout()}>
-            Logout
+            Kijelentkezés
           </Button>
         </Group>
       )}
