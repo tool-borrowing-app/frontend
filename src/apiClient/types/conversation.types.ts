@@ -15,3 +15,10 @@ export type SendMessageDto = {
   conversationId: number;
   text: string;
 }
+
+export type MessageDto = {
+  sentAt: Date;
+  sentBy: UserDto;
+  text: string;
+  seenByReceiver: boolean;
+}

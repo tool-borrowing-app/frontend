@@ -13,3 +13,7 @@ export async function createConversation(payload: StartConversationPayload) {
 export async function sendMessage(payload: SendMessageDto) {
   return await apiClient.post("/messages", payload);
 }
+
+export async function getMessages(conversationId: number) {
+  return await apiClient.get(`/conversations/${conversationId}/messages`)
+}

@@ -1,7 +1,7 @@
 "use client";
 
-import { fetchConversations, sendMessage } from "@/apiClient/modules/conversation";
-import { ConversationDto, SendMessageDto } from "@/apiClient/types/conversation.types";
+import { fetchConversations, getMessages, sendMessage } from "@/apiClient/modules/conversation";
+import { ConversationDto, MessageDto, SendMessageDto } from "@/apiClient/types/conversation.types";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Button, Card, Container, Group, Stack, Image, Text, Grid, TextInput, Box } from "@mantine/core";
 import { useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 export default function Page() {
 
   const [allConversations, setAllConversations] = useState<ConversationDto[]>([]);
+  const [messages, setMessages] = useState<MessageDto[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>();
   const [messageValue, setMessageValue] = useState<string>("");
   const { user } = useProfile();
@@ -17,6 +18,16 @@ export default function Page() {
     getAllConversations();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setMessageValue("");
+      if (selectedConversationId) {
+        await getMessages(selectedConversationId);
+      }
+    };
+
+    fetchData();
+  }, [selectedConversationId]);
   const getAllConversations = async () => {
     const res = await fetchConversations();
     setAllConversations(res.data);
@@ -43,7 +54,6 @@ export default function Page() {
                     radius="md"
                     onClick={() => {
                       setSelectedConversationId(conversation.id)
-                      setMessageValue("");
                     }}
                     bg={isSelected ? "var(--mantine-color-blue-light)" : "white"}
                     style={{ cursor: "pointer", transition: "0.2s" }}
