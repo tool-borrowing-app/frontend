@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { createConversation } from "@/apiClient/modules/conversation";
 import { getToolById } from "@/apiClient/modules/tool";
+import { StartConversationPayload } from "@/apiClient/types/conversation.types";
 import { ToolDto } from "@/app/eszkozeim/page";
 import { useProfile } from "@/contexts/ProfileContext";
 import {
@@ -41,6 +43,10 @@ export function ToolPage({ id }: { id: string }) {
       setLoading(false);
     }
   };
+
+  const startConversation = async () => {
+    await createConversation({ toolId: tool?.id, } as unknown as StartConversationPayload);
+  }
 
   useEffect(() => {
     fetchTool();
@@ -205,9 +211,11 @@ export function ToolPage({ id }: { id: string }) {
               </Button>
               {tool.user?.email !== user?.email &&
                 <Button
-                  onClick={() => {console.log("toool: ", tool); console.log("user: ", user)}}
+                  onClick={async () => {
+                    await startConversation();
+                  }}
                 >
-                  Üzenet
+                Üzenet
                 </Button>
               }
               <Button
