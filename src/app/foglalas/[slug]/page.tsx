@@ -18,6 +18,9 @@ import {
 import { DateInput } from "@mantine/dates";
 import { IconCalendar } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
+import { createReservation } from "@/apiClient/modules/reservation";
+import { useProfile } from "@/contexts/ProfileContext";
+import { notifications } from "@mantine/notifications";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -88,6 +91,31 @@ export default function Page({
 
   const router = useRouter();
 
+  const { user } = useProfile();
+
+  const handlePayClick = async () => {
+    if (!slug || !from || !to || !user) return;
+
+    const result = await createReservation({
+      toolId: slug,
+      dateFrom: from,
+      dateTo: to,
+      borrowerUserId: user.id,
+    });
+
+    if (result.status === 200) {
+      notifications.show({
+        title: "Sikeres foglalás",
+        message: "Az eszköz foglalása sikeresen megtörtént.",
+        color: "green",
+      });
+
+      // TODO: redirect the user to reservations page ??
+    }
+
+    console.log({ result });
+  };
+
   return (
     <Box p="md">
       <Group align="flex-start" wrap="nowrap" gap="xl">
@@ -150,7 +178,10 @@ export default function Page({
               <Button onClick={() => router.back()} variant="outline">
                 Mégse
               </Button>
-              <Button disabled={!acceptTerms || days === 0 || isLoading}>
+              <Button
+                disabled={!acceptTerms || days === 0 || isLoading}
+                onClick={() => handlePayClick()}
+              >
                 Fizetés
               </Button>
             </Group>
