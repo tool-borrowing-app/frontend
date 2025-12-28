@@ -28,7 +28,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-type LookupDto = {
+export type LookupDto = {
   id?: number;
   code?: string;
   name?: string;
