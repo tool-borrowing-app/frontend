@@ -10,5 +10,8 @@
     "**/*.sass",
     "**/*.less",
     "node_modules/@mantine/core/styles.layer.css"
-  ]
+  ],
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }

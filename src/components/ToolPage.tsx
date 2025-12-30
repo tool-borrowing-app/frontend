@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { createConversation, fetchConversationsWithParam } from "@/apiClient/modules/conversation";
 import { getToolById } from "@/apiClient/modules/tool";
+import { ConversationDto, StartConversationPayload } from "@/apiClient/types/conversation.types";
 import { ToolDto } from "@/app/eszkozeim/page";
+import { useProfile } from "@/contexts/ProfileContext";
 import {
   Badge,
   Button,
@@ -28,6 +31,8 @@ export function ToolPage({ id }: { id: string }) {
   const [tool, setTool] = useState<ToolDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const { user } = useProfile();
+  const [allConversations, setAllConversations] = useState<ConversationDto[]>([]);
 
   const fetchTool = async () => {
     setLoading(true);
@@ -35,10 +40,20 @@ export function ToolPage({ id }: { id: string }) {
       const result = await getToolById(id);
       setTool(result.data);
       setActiveImg(0);
+      fetchConversationForItem();
     } finally {
       setLoading(false);
     }
   };
+
+  const startConversation = async () => {
+    return await createConversation({ toolId: tool?.id, } as unknown as StartConversationPayload);
+  }
+
+  const fetchConversationForItem = async () => {
+    const res = await fetchConversationsWithParam(id);
+    setAllConversations(res.data);
+  }
 
   useEffect(() => {
     fetchTool();
@@ -201,6 +216,39 @@ export function ToolPage({ id }: { id: string }) {
               >
                 Vissza
               </Button>
+              {tool.user?.email !== user?.email &&
+                <>
+                  {allConversations.length === 0 ? (
+                    <>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const res = await startConversation();
+                            if (res && res.data && res.data.id) {
+                              const newId = res.data.id;
+                              router.push(`/uzenetek?id=${newId}`);
+                            }
+                          } catch (error) {
+                            console.error("Failed to start conversation:", error);
+                          }
+                        }}
+                      >
+                        Üzenetezés kezdése
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={() => {
+                          router.push(`/uzenetek?id=${allConversations[0].id}`);
+                        }}
+                      >
+                        Üzenetezés
+                      </Button>
+                    </>
+                  )}
+                </>
+              }
               <Button
                 onClick={() => router.push(`/foglalas/${id}`)}
                 className="w-32"
@@ -211,6 +259,6 @@ export function ToolPage({ id }: { id: string }) {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
