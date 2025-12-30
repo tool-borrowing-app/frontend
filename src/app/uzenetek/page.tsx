@@ -54,11 +54,7 @@ export default function Page() {
   }
 
   return (
-    <>üzenetek page
-      <Button onClick={() => { console.log("msg val ", messageValue) }}>
-        Debug
-      </Button>
-
+    <>
       <Container size="xl" py="md">
         <Grid gutter="md">
           <Grid.Col span={{ base: 12, md: 4 }}>
