@@ -5,14 +5,30 @@ import { ConversationDto, MessageDto, SendMessageDto } from "@/apiClient/types/c
 import { useProfile } from "@/contexts/ProfileContext";
 import { Button, Card, Container, Group, Stack, Image, Text, Grid, TextInput, Box } from "@mantine/core";
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 export default function Page() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const urlId = searchParams.get("id");
 
   const [allConversations, setAllConversations] = useState<ConversationDto[]>([]);
   const [messages, setMessages] = useState<MessageDto[]>([]);
-  const [selectedConversationId, setSelectedConversationId] = useState<number | null>();
+  const [selectedConversationId, setSelectedConversationId] = useState<number | null>(urlId ? parseInt(urlId) : null);
   const [messageValue, setMessageValue] = useState<string>("");
   const { user } = useProfile();
+
+  const changeSelectedConversationId = (id: number | null) => {
+    const params = new URLSearchParams(searchParams);
+    if (id) {
+      params.set("id", id.toString());
+    } else {
+      params.delete("id");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   useEffect(() => {
     getAllConversations();
@@ -28,7 +44,7 @@ export default function Page() {
         setMessages([]);
       }
     };
-
+    changeSelectedConversationId(selectedConversationId);
     fetchData();
   }, [selectedConversationId]);
 

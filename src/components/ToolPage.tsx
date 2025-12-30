@@ -47,7 +47,7 @@ export function ToolPage({ id }: { id: string }) {
   };
 
   const startConversation = async () => {
-    await createConversation({ toolId: tool?.id, } as unknown as StartConversationPayload);
+    return await createConversation({ toolId: tool?.id, } as unknown as StartConversationPayload);
   }
 
   const fetchConversationForItem = async () => {
@@ -222,7 +222,15 @@ export function ToolPage({ id }: { id: string }) {
                     <>
                       <Button
                         onClick={async () => {
-                          await startConversation();
+                          try {
+                            const res = await startConversation();
+                            if (res && res.data && res.data.id) {
+                              const newId = res.data.id;
+                              router.push(`/uzenetek?id=${newId}`);
+                            }
+                          } catch (error) {
+                            console.error("Failed to start conversation:", error);
+                          }
                         }}
                       >
                         Üzenetezés kezdése
@@ -230,7 +238,11 @@ export function ToolPage({ id }: { id: string }) {
                     </>
                   ) : (
                     <>
-                      <Button>
+                      <Button
+                        onClick={() => {
+                          router.push(`/uzenetek?id=${allConversations[0].id}`);
+                        }}
+                      >
                         Üzenetezés
                       </Button>
                     </>
@@ -247,6 +259,6 @@ export function ToolPage({ id }: { id: string }) {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
