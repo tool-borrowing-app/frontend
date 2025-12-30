@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchConversations, getMessages, sendMessage } from "@/apiClient/modules/conversation";
+import { deleteConversation, fetchConversations, getMessages, sendMessage } from "@/apiClient/modules/conversation";
 import { ConversationDto, MessageDto, SendMessageDto } from "@/apiClient/types/conversation.types";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Button, Card, Container, Group, Stack, Image, Text, Grid, TextInput, Box } from "@mantine/core";
@@ -89,9 +89,35 @@ export default function Page() {
             >
               {selectedConversationId ? (
                 <>
-                  {/* 1. Header (Optional) */}
-                  <Box mb="md" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)', paddingBottom: '10px' }}>
-                    <Text fw={700}>Beszélgetés</Text>
+                  {/* 1. Header */}
+                  <Box
+                    mb="md"
+                    style={{
+                      borderBottom: '1px solid var(--mantine-color-gray-2)',
+                      paddingBottom: '10px'
+                    }}
+                  >
+                    <Group justify="space-between" align="center">
+                      <Text fw={700}>Beszélgetés</Text>
+
+                      <Button
+                        variant="subtle"
+                        color="red"
+                        size="xs"
+                        onClick={async () => {
+                          if (window.confirm("Biztosan törölni szeretnéd ezt a beszélgetést?")) {
+                            console.log("Deleting conversation:", selectedConversationId);
+                            const res = await deleteConversation(selectedConversationId);
+                            if (res) {
+                              setSelectedConversationId(null);
+                              await getAllConversations();
+                            }
+                          }
+                        }}
+                      >
+                        Beszélgetés törlése
+                      </Button>
+                    </Group>
                   </Box>
 
                   {/* 2. Scrollable Message Area */}
@@ -175,7 +201,7 @@ export default function Page() {
                 </>
               ) : (
                 <Stack align="center" justify="center" style={{ flex: 1 }}>
-                  <Text c="dimmed">Válassz ki egy beszélgetést az üzenetek megtekintéséhez</Text>
+                  <Text c="dimmed">{allConversations.length ? (<>Válassz ki egy beszélgetést az üzenetek megtekintéséhez</>) : (<>Nincsenek beszélgetések</>)}</Text>
                 </Stack>
               )}
             </Card>

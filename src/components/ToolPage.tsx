@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { createConversation } from "@/apiClient/modules/conversation";
+import { createConversation, fetchConversationsWithParam } from "@/apiClient/modules/conversation";
 import { getToolById } from "@/apiClient/modules/tool";
-import { StartConversationPayload } from "@/apiClient/types/conversation.types";
+import { ConversationDto, StartConversationPayload } from "@/apiClient/types/conversation.types";
 import { ToolDto } from "@/app/eszkozeim/page";
 import { useProfile } from "@/contexts/ProfileContext";
 import {
@@ -32,6 +32,7 @@ export function ToolPage({ id }: { id: string }) {
   const [loading, setLoading] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
   const { user } = useProfile();
+  const [allConversations, setAllConversations] = useState<ConversationDto[]>([]);
 
   const fetchTool = async () => {
     setLoading(true);
@@ -39,6 +40,7 @@ export function ToolPage({ id }: { id: string }) {
       const result = await getToolById(id);
       setTool(result.data);
       setActiveImg(0);
+      fetchConversationForItem();
     } finally {
       setLoading(false);
     }
@@ -46,6 +48,11 @@ export function ToolPage({ id }: { id: string }) {
 
   const startConversation = async () => {
     await createConversation({ toolId: tool?.id, } as unknown as StartConversationPayload);
+  }
+
+  const fetchConversationForItem = async () => {
+    const res = await fetchConversationsWithParam(id);
+    setAllConversations(res.data);
   }
 
   useEffect(() => {
@@ -210,13 +217,25 @@ export function ToolPage({ id }: { id: string }) {
                 Vissza
               </Button>
               {tool.user?.email !== user?.email &&
-                <Button
-                  onClick={async () => {
-                    await startConversation();
-                  }}
-                >
-                Üzenet
-                </Button>
+                <>
+                  {allConversations.length === 0 ? (
+                    <>
+                      <Button
+                        onClick={async () => {
+                          await startConversation();
+                        }}
+                      >
+                        Üzenetezés kezdése
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button>
+                        Üzenetezés
+                      </Button>
+                    </>
+                  )}
+                </>
               }
               <Button
                 onClick={() => router.push(`/foglalas/${id}`)}
