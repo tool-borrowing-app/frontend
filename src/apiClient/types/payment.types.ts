@@ -1,2 +1,6 @@
-// TODO: make this type right!
-export type CreateCheckoutSessionDto = object;
+export type CreateCheckoutSessionDto = {
+  toolId: string;
+  dateFrom: Date;
+  dateTo: Date;
+  borrowerUserId: number;
+};

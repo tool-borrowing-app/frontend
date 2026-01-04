@@ -92,34 +92,20 @@ export default function Page({
 
   const router = useRouter();
 
-  // const { user } = useProfile();
+  const { user } = useProfile();
 
   const handlePayClick = async () => {
-    const result = await createCheckoutSession({});
+    if (!slug || !from || !to || !user) return;
+
+    const result = await createCheckoutSession({
+      toolId: slug,
+      dateFrom: from,
+      dateTo: to,
+      borrowerUserId: user.id,
+    });
     if (result.status === 200 && result.data) {
       window.location.href = result.data;
     }
-
-    // if (!slug || !from || !to || !user) return;
-
-    // const result = await createReservation({
-    //   toolId: slug,
-    //   dateFrom: from,
-    //   dateTo: to,
-    //   borrowerUserId: user.id,
-    // });
-
-    // if (result.status === 200) {
-    //   notifications.show({
-    //     title: "Sikeres foglalás",
-    //     message: "Az eszköz foglalása sikeresen megtörtént.",
-    //     color: "green",
-    //   });
-
-    //   // TODO: redirect the user to reservations page ??
-    // }
-
-    // console.log({ result });
   };
 
   return (
