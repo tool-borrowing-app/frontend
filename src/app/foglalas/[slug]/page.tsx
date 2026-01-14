@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { createReservation } from "@/apiClient/modules/reservation";
 import { useProfile } from "@/contexts/ProfileContext";
 import { notifications } from "@mantine/notifications";
+import { createCheckoutSession } from "@/apiClient/modules/payment";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -96,24 +97,15 @@ export default function Page({
   const handlePayClick = async () => {
     if (!slug || !from || !to || !user) return;
 
-    const result = await createReservation({
+    const result = await createCheckoutSession({
       toolId: slug,
       dateFrom: from,
       dateTo: to,
       borrowerUserId: user.id,
     });
-
-    if (result.status === 200) {
-      notifications.show({
-        title: "Sikeres foglalás",
-        message: "Az eszköz foglalása sikeresen megtörtént.",
-        color: "green",
-      });
-
-      // TODO: redirect the user to reservations page ??
+    if (result.status === 200 && result.data) {
+      window.location.href = result.data;
     }
-
-    console.log({ result });
   };
 
   return (
