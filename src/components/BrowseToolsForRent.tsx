@@ -183,9 +183,7 @@ export default function BrowseToolsForRent() {
                 withBorder
                 radius="md"
                 className="p-3 flex flex-col gap-2 cursor-pointer"
-                onClick={() =>
-                  (window.location.href = "/kolcsonzes?id=" + tool.id)
-                }
+                onClick={() => (window.location.href = "/?id=" + tool.id)}
               >
                 {tool?.imageUrls?.length !== undefined &&
                 tool.imageUrls.length > 0 ? (

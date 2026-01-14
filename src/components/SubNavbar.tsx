@@ -10,7 +10,7 @@ export default function SubNavbar() {
   const router = useRouter();
 
   const navItems = [
-    { label: "Kölcsönzés", href: "/kolcsonzes" },
+    { label: "Kölcsönzés", href: "/" },
     { label: "Kölcsönzéseim", href: "/kolcsonzeseim" },
     { label: "Eszközeim", href: "/eszkozeim" },
     { label: "Aktivitás", href: "/aktivitás" },
