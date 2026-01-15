@@ -8,3 +8,13 @@ export async function createReservation(payload: CreateReservationDto) {
 export async function getUserReservations() {
   return await apiClient.get("reservation");
 }
+
+export async function submitReservationReview(
+  id: number,
+  review: { borrowerScore: number | null; borrowerComment: string | null }
+) {
+  const res = await apiClient.post(`/reservation/${id}/review`, review);
+  return res.data;
+}
+
+
