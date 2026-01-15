@@ -198,6 +198,16 @@ export default function Page() {
     });
   }, [tools, q, categoryFilter, statusFilter]);
 
+  useEffect(() => {
+    if (!selectedTool) return;
+
+    const stillPresent = filtered.some(t => String(t.id) === String(selectedTool.id));
+    if (!stillPresent) {
+      setSelectedTool(null);
+      setReservations([]);
+    }
+  }, [filtered, selectedTool]);
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const paged = useMemo(() => {
     const p = Math.min(page, totalPages);
