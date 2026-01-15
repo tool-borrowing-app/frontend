@@ -1,21 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { getUserReservations } from "@/apiClient/modules/reservation";
+import { getUserReservations, submitReservationReview } from "@/apiClient/modules/reservation";
 import { ReservationDto } from "@/apiClient/types/reservation.types";
 import { useEffect, useMemo, useState } from "react";
 import {
   Anchor,
   Badge,
+  Button,
   Group,
   Loader,
+  Modal,
   Pagination,
   Paper,
+  Rating,
   Select,
   Table,
   Text,
+  Textarea,
   TextInput,
-  Title,
 } from "@mantine/core";
 import { IconSearch, IconStarFilled } from "@tabler/icons-react";
 
@@ -78,11 +81,19 @@ export default function Page() {
 
   const [page, setPage] = useState(1);
 
+  // review modal state (we review the OWNER)
+  const [openedReviewModal, setOpenedReviewModal] = useState(false);
+  const [currentReservation, setCurrentReservation] = useState<ReservationDto | null>(null);
+  const [reviewRating, setReviewRating] = useState<number | null>(null);
+  const [reviewComment, setReviewComment] = useState<string>("");
+  const [isReviewReadonly, setIsReviewReadonly] = useState(false);
+  const [isSavingReview, setIsSavingReview] = useState(false);
+
   const fetchReservations = async () => {
     setLoading(true);
     try {
       const result = await getUserReservations();
-      const data: ReservationDto[] = await result.data;
+      const data: ReservationDto[] = result?.data ?? [];
       setReservations(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
@@ -139,10 +150,10 @@ export default function Page() {
 
     const getOtherName = (r: ReservationDto) =>
       ((r as any)?.otherUserName ??
-        (r as any)?.ownerName ??
-        (r as any)?.borrowerName ??
-        (r.toolDto as any)?.ownerName ??
-        "") as string;
+       (r as any)?.ownerName ??
+       (r as any)?.borrowerName ??
+       (r.toolDto as any)?.ownerName ??
+       "") as string;
 
     const getToolName = (r: ReservationDto) =>
       ((r.toolDto as any)?.name ?? "") as string;
@@ -254,6 +265,43 @@ export default function Page() {
     </button>
   );
 
+  /* --------------- Review modal helpers (owner review) --------------- */
+  const openReviewModal = (r: ReservationDto) => {
+    setCurrentReservation(r);
+    setReviewRating(r.ownerScore ?? null);
+    setReviewComment(r.ownerComment ?? "");
+    setIsReviewReadonly(r.ownerScore != null); // readonly ha már értékeltük
+    setOpenedReviewModal(true);
+  };
+
+
+  const saveReview = async () => {
+    if (!currentReservation) return;
+    if (isReviewReadonly) return;
+
+    setIsSavingReview(true);
+    try {
+      // send ownerScore / ownerComment to backend
+      const updated = await submitReservationReview(currentReservation.id, {
+        ownerScore: reviewRating,
+        ownerComment: reviewComment ?? null,
+      });
+
+      const updatedReservation: ReservationDto = (updated && (updated.data ?? updated)) as ReservationDto;
+
+      setReservations((prev) =>
+        prev.map((x) => (x.id === updatedReservation.id ? updatedReservation : x))
+      );
+
+      setOpenedReviewModal(false);
+      setCurrentReservation(null);
+    } catch (err) {
+      console.error("Hiba a review mentésekor:", err);
+    } finally {
+      setIsSavingReview(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <Paper withBorder radius="md" className="p-5">
@@ -331,48 +379,63 @@ export default function Page() {
                   </Table.Td>
                 </Table.Tr>
               ) : (
-                paged.map((r) => {
-                  const toolName = ((r.toolDto as any)?.name ?? "-") as string;
+                 paged.map((r) => {
+                   const toolName = ((r.toolDto as any)?.name ?? "-") as string;
 
-                  const toolOwnerName = "TODO";
+                   // Owner name - try multiple possible fields
+                   const toolOwnerName =
+                     ((r.toolDto as any)?.user?.firstName && (r.toolDto as any)?.user?.lastName)
+                     ? `${(r.toolDto as any).user.firstName} ${(r.toolDto as any).user.lastName}`
+                     : (r as any)?.ownerName ?? (r as any)?.otherUserName ?? "-";
 
-                  const price =
-                    (r.toolDto as any)?.rentalPrice ??
-                    (r.toolDto as any)?.price ??
-                    null;
+                   const price =
+                     (r.toolDto as any)?.rentalPrice ?? (r.toolDto as any)?.price ?? null;
 
-                  const statusCode = (r.status?.code ?? "").toUpperCase();
-                  const isClosed =
-                    statusCode.includes("LEZ") || statusCode.includes("CLOSED");
+                   const statusCode = (r.status?.code ?? "").toUpperCase();
+                   const isClosed =
+                     statusCode.includes("LEZ") || statusCode.includes("CLOSED") ||
+                     statusCode.includes("FINISHED");
 
-                  return (
-                    <Table.Tr key={r.id}>
-                      <Table.Td className="font-medium">
-                        {toolOwnerName}
-                      </Table.Td>
-                      <Table.Td>{toolName}</Table.Td>
-                      <Table.Td>{formatDateHu(r.dateFrom)}</Table.Td>
-                      <Table.Td>{formatDateHu(r.dateTo)}</Table.Td>
-                      <Table.Td>
-                        {statusBadge(r.status?.code, r.status?.name)}
-                      </Table.Td>
-                      <Table.Td>{formatHuf(price)}</Table.Td>
-                      <Table.Td>
-                        <Group gap="md">
-                          <Anchor>Megtekintés</Anchor>
+                   // <-- use ownerScore to decide if already reviewed (we review owner)
+                   const alreadyReviewed = r.ownerScore != null;
 
-                          {isClosed && (
-                            <Group gap={6}>
-                              <IconStarFilled size={14} />
-                              <Anchor>Értékelés</Anchor>
-                            </Group>
-                          )}
-                        </Group>
-                      </Table.Td>
-                    </Table.Tr>
-                  );
-                })
-              )}
+                   return (
+                     <Table.Tr key={r.id}>
+                       <Table.Td className="font-medium">
+                         {toolOwnerName}
+                       </Table.Td>
+                       <Table.Td>{toolName}</Table.Td>
+                       <Table.Td>{formatDateHu(r.dateFrom)}</Table.Td>
+                       <Table.Td>{formatDateHu(r.dateTo)}</Table.Td>
+                       <Table.Td>
+                         {statusBadge(r.status?.code, r.status?.name)}
+                       </Table.Td>
+                       <Table.Td>{formatHuf(price)}</Table.Td>
+                       <Table.Td>
+                         <Group gap="md">
+                           <Anchor>Megtekintés</Anchor>
+
+                           {isClosed && (
+                             <Group gap={6} align="center">
+                               <IconStarFilled
+                                 size={14}
+                                 style={{ color: alreadyReviewed ? "#f5c518" : undefined }}
+                               />
+                               <Anchor
+                                 component="button"
+                                 onClick={() => openReviewModal(r)}
+                                 style={{ cursor: "pointer" }}
+                               >
+                                 Értékelés
+                               </Anchor>
+                             </Group>
+                           )}
+                         </Group>
+                       </Table.Td>
+                     </Table.Tr>
+                   );
+                 })
+               )}
             </Table.Tbody>
           </Table>
         </div>
@@ -390,6 +453,58 @@ export default function Page() {
           />
         </div>
       </Paper>
+
+      {/* Review Modal (owner review) */}
+      <Modal
+        opened={openedReviewModal}
+        onClose={() => setOpenedReviewModal(false)}
+        title={`Értékelés: ${currentReservation?.toolDto?.name ?? ""}`}
+        centered
+      >
+        <Text mb="xs">
+          Tulajdonos:{" "}
+          {currentReservation?.toolDto?.user
+           ? `${(currentReservation.toolDto as any).user.firstName} ${(currentReservation.toolDto as any).user.lastName}`
+           : (currentReservation as any)?.ownerName ?? "-"}
+        </Text>
+
+        {isReviewReadonly && (
+          <Text size="sm" c="dimmed" mb="sm">
+            Ezt a foglalást már értékelte. Az értékelés nem módosítható.
+          </Text>
+        )}
+
+        <Text mb="xs">Értékelés:</Text>
+        <Rating
+          value={reviewRating ?? 0}
+          onChange={(val) => setReviewRating(val)}
+          size="lg"
+          readOnly={isReviewReadonly}
+        />
+
+        <Text mb="xs" mt="sm">
+          Leírás:
+        </Text>
+        <Textarea
+          value={reviewComment ?? ""}
+          onChange={(e) => setReviewComment(e.currentTarget.value)}
+          placeholder="Ide írhatod a megjegyzést"
+          minRows={3}
+          readOnly={isReviewReadonly}
+        />
+
+        <Group mt="md">
+          <Button variant="outline" onClick={() => setOpenedReviewModal(false)}>
+            {isReviewReadonly ? "Bezár" : "Mégse"}
+          </Button>
+
+          {!isReviewReadonly && (
+            <Button onClick={saveReview} loading={isSavingReview}>
+              Mentés
+            </Button>
+          )}
+        </Group>
+      </Modal>
     </div>
   );
 }

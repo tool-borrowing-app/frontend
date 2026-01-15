@@ -15,6 +15,7 @@ import {
   Modal,
   Pagination,
   Paper,
+  Anchor,
   Rating,
   Select,
   Table,
@@ -367,12 +368,27 @@ export default function Page() {
                                        </Badge>
                                      </Table.Td>
                                      <Table.Td>
-                                       {r.status?.code === "FINISHED" && (
-                                         <ActionIcon color={r.borrowerScore ? "yellow" : "gray"}
-                                                     onClick={() => openRatingModal(r)}>
-                                           <IconStar size={18} />
-                                         </ActionIcon>
-                                       )}
+                                       <Group gap="md" wrap="nowrap">
+                                         <Anchor
+                                           component="button"
+                                           onClick={() => {
+                                             console.log("Megtekintés:", r.id);
+                                           }}
+                                           style={{ cursor: "pointer" }}
+                                         >Megtekintés
+                                         </Anchor>
+                                         {r.status?.code === "FINISHED" && (
+                                           <Group align="center">
+                                             <IconStar size={14} color={r.borrowerScore ? "#f5c518" : undefined} />
+                                             <Anchor
+                                               component="button"
+                                               onClick={() => openRatingModal(r)}
+                                               style={{ cursor: "pointer" }}
+                                             >Értékelés
+                                             </Anchor>
+                                           </Group>
+                                         )}
+                                       </Group>
                                      </Table.Td>
                                    </Table.Tr>
                                  ))}
