@@ -3,6 +3,7 @@
 
 import { getToolsForUser } from "@/apiClient/modules/users";
 import { getReservationsForTool } from "@/apiClient/modules/tool";
+import { submitReservationReview } from "@/apiClient/modules/reservation";
 import { getUserReviewStatistics, ReviewStatisticsDto } from "@/apiClient/modules/users";
 import { DeleteToolModal } from "@/components/modals/DeleteToolModal";
 import { useProfile } from "@/contexts/ProfileContext";
@@ -108,12 +109,18 @@ export default function Page() {
   const [reservations, setReservations] = useState<ReservationDto[]>([]);
   const [loadingReservations, setLoadingReservations] = useState(false);
 
+  // BORROWER STATS modal
   const [openedBorrowerModal, setOpenedBorrowerModal] = useState(false);
   const [selectedBorrower, setSelectedBorrower] = useState<UserDto | null>(null);
-
-  // New states for review statistics
   const [reviewStats, setReviewStats] = useState<ReviewStatisticsDto | null>(null);
   const [loadingReviews, setLoadingReviews] = useState(false);
+
+  // RATING modal (for finished reservations) - owner rates borrower (stored in borrowerScore/borrowerComment)
+  const [openedRatingModal, setOpenedRatingModal] = useState(false);
+  const [currentReservation, setCurrentReservation] = useState<ReservationDto | null>(null);
+  const [rating, setRating] = useState<number | null>(null);
+  const [comment, setComment] = useState<string>("");
+  const [isRatingReadonly, setIsRatingReadonly] = useState(false);
 
   const fetchTools = async () => {
     if (!user?.id) return;
@@ -204,7 +211,7 @@ export default function Page() {
 
   useEffect(() => setPage(1), [q, categoryFilter, statusFilter]);
 
-  // Open borrower modal and fetch review statistics
+  // Borrower stats modal fetch
   const openBorrowerModal = async (borrower: UserDto) => {
     setSelectedBorrower(borrower);
     setOpenedBorrowerModal(true);
@@ -223,6 +230,49 @@ export default function Page() {
       setReviewStats(null);
     } finally {
       setLoadingReviews(false);
+    }
+  };
+
+  // Rating modal (for finished reservations) - owner rates borrower
+  const openRatingModal = (reservation: ReservationDto) => {
+    setCurrentReservation(reservation);
+    // prefill with already-submitted rating if present (owner previously rated borrower)
+    setRating(reservation.borrowerScore ?? null);
+    setComment(reservation.borrowerComment ?? "");
+    setIsRatingReadonly(reservation.borrowerScore != null);
+    setOpenedRatingModal(true);
+  };
+
+  const saveRating = async () => {
+    if (!currentReservation) return;
+    if (isRatingReadonly) return; // extra guard
+
+    try {
+      // Call API - expected to return updated reservation (try to handle both shapes)
+      const res = await submitReservationReview(currentReservation.id, {
+        borrowerScore: rating,
+        borrowerComment: comment
+      });
+
+      // Try different forms of return value (res or res.data)
+      const updated: ReservationDto = (res && (res.data ?? res)) as ReservationDto;
+
+      if (updated && updated.id) {
+        setReservations(prev => prev.map(r => (r.id === updated.id ? updated : r)));
+      } else {
+        // Fallback: Update currentReservation fields locally
+        setReservations(prev => prev.map(r => {
+          if (r.id === currentReservation.id) {
+            return { ...r, borrowerScore: rating ?? null, borrowerComment: comment ?? null };
+          }
+          return r;
+        }));
+      }
+
+      setOpenedRatingModal(false);
+      setCurrentReservation(null);
+    } catch (err) {
+      console.error("Hiba a mentésnél:", err);
     }
   };
 
@@ -387,9 +437,18 @@ export default function Page() {
                                        <Table.Td>
                                          <Group gap="md" wrap="nowrap">
                                            <Anchor component="button" onClick={() => alert("Megtekintés")} style={{ cursor: "pointer" }}>Megtekintés</Anchor>
-                                           {r.status?.code !== "FINISHED" && (
-                                             <Button size="xs" variant="light" onClick={() => openBorrowerModal(r.borrower)}>Bérlő értékelései</Button>
-                                           )}
+
+                                           {}
+                                           {r.status?.code === "FINISHED" ? (
+                                             <Group align="center">
+                                               <IconStar size={14} color={r.borrowerScore ? "#f5c518" : undefined} />
+                                               <Anchor component="button" onClick={() => openRatingModal(r)} style={{ cursor: "pointer" }}>
+                                                 Értékelés
+                                               </Anchor>
+                                             </Group>
+                                           ) : (
+                                              <Button size="xs" variant="light" onClick={() => openBorrowerModal(r.borrower)}>Bérlő értékelései</Button>
+                                            )}
                                          </Group>
                                        </Table.Td>
                                      </Table.Tr>
@@ -414,6 +473,61 @@ export default function Page() {
                    </Paper>
                  </Box>
 
+                 {}
+                 <Modal
+                   opened={openedRatingModal}
+                   onClose={() => {
+                     setOpenedRatingModal(false);
+                     setCurrentReservation(null);
+                   }}
+                   title={`Értékelés: ${currentReservation?.toolDto?.name ?? ""}`}
+                   centered
+                 >
+                   <Text mb="xs">
+                     Név: {currentReservation?.toolDto?.user?.firstName}{" "}
+                     {currentReservation?.toolDto?.user?.lastName}
+                   </Text>
+
+                   {isRatingReadonly && (
+                     <Text size="sm" c="dimmed" mb="sm">
+                       Ezt a foglalást már értékelte. Az értékelés nem módosítható.
+                     </Text>
+                   )}
+
+                   <Text mb="xs">Értékelés:</Text>
+                   <Rating
+                     value={rating ?? 0}
+                     onChange={(val) => setRating(val)}
+                     size="lg"
+                     readOnly={isRatingReadonly}
+                   />
+
+                   <Text mb="xs" mt="sm">Leírás:</Text>
+                   <Textarea
+                     value={comment ?? ""}
+                     onChange={(e) => setComment(e.currentTarget.value)}
+                     placeholder="Ide írhatod a megjegyzést"
+                     minRows={3}
+                     readOnly={isRatingReadonly}
+                   />
+
+                   <Group mt="md">
+                     <Button variant="outline" onClick={() => {
+                       setOpenedRatingModal(false);
+                       setCurrentReservation(null);
+                     }}>
+                       {isRatingReadonly ? "Bezár" : "Mégse"}
+                     </Button>
+
+                     {!isRatingReadonly && (
+                       <Button onClick={saveRating} disabled={rating == null || rating === 0}>
+                         Mentés
+                       </Button>
+                     )}
+                   </Group>
+                 </Modal>
+
+                 {}
                  <Modal
                    opened={openedBorrowerModal}
                    onClose={() => {
