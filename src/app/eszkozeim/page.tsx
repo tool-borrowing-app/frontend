@@ -52,6 +52,7 @@ export type ReservationDto = {
   ownerComment?: string | null;
   borrowerScore?: number | null;
   borrowerComment?: string | null;
+  borrower: UserDto;
 };
 
 function normalizeText(v: unknown) {
@@ -357,9 +358,11 @@ export default function Page() {
                                <Table.Tbody>
                                  {reservations.map((r) => (
                                    <Table.Tr key={r.id}>
-                                     <Table.Td>{r.toolDto?.user
-                                                ? `${r.toolDto.user.firstName} ${r.toolDto.user.lastName}`
-                                                : "-"}</Table.Td>
+                                     <Table.Td>
+                                       {r.borrower
+                                        ? `${r.borrower.firstName} ${r.borrower.lastName}`
+                                        : "-"}
+                                     </Table.Td>
                                      <Table.Td>{r.dateFrom}</Table.Td>
                                      <Table.Td>{r.dateTo}</Table.Td>
                                      <Table.Td>
