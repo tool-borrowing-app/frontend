@@ -249,12 +249,14 @@ export function ToolPage({ id }: { id: string }) {
                   )}
                 </>
               }
-              <Button
-                onClick={() => router.push(`/foglalas/${id}`)}
-                className="w-32"
-              >
-                Foglalás
-              </Button>
+              {tool.user?.email !== user?.email && (
+                <Button
+                  onClick={() => router.push(`/foglalas/${id}`)}
+                  className="w-32"
+                >
+                  Foglalás
+                </Button>
+              )}
             </div>
           </div>
         </div>
