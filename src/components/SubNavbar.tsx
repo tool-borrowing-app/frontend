@@ -13,7 +13,7 @@ export default function SubNavbar() {
     { label: "Kölcsönzés", href: "/" },
     { label: "Kölcsönzéseim", href: "/kolcsonzeseim" },
     { label: "Eszközeim", href: "/eszkozeim" },
-    { label: "Aktivitás", href: "/aktivitás" },
+    { label: "Aktivitás", href: "/aktivitas" },
     { label: "Üzenetek", href: "/uzenetek" }
   ];
 
