@@ -11,14 +11,20 @@ import {
   Button,
   Group,
   Loader,
+  Modal,
+  Box,
   Paper,
   Rating,
+  ScrollArea,
+  Stack,
   Text,
   Title,
+  Divider,
 } from "@mantine/core";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getUserReviewStatistics, ReviewStatisticsDto } from "@/apiClient/modules/users";
 
 function formatHuf(value?: number | null) {
   if (value == null) return "—";
@@ -33,6 +39,9 @@ export function ToolPage({ id }: { id: string }) {
   const [activeImg, setActiveImg] = useState(0);
   const { user } = useProfile();
   const [allConversations, setAllConversations] = useState<ConversationDto[]>([]);
+  const [reviewStats, setReviewStats] = useState<ReviewStatisticsDto | null>(null);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsModalOpened, setReviewsModalOpened] = useState(false);
 
   const fetchTool = async () => {
     setLoading(true);
@@ -45,6 +54,25 @@ export function ToolPage({ id }: { id: string }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (tool?.user?.id) {
+      setReviewsLoading(true);
+      (async () => {
+        try {
+          const res = await getUserReviewStatistics(Number(tool.user?.id));
+          if (res.status === 200 && res.data) {
+            setReviewStats(res.data);
+          }
+        } catch (err) {
+          console.error("Error loading review stats:", err);
+        } finally {
+          setReviewsLoading(false);
+        }
+      })();
+    }
+  }, [tool?.user?.id]);
+
 
   const startConversation = async () => {
     return await createConversation({ toolId: tool?.id, } as unknown as StartConversationPayload);
@@ -200,12 +228,20 @@ export function ToolPage({ id }: { id: string }) {
             </Paper>
 
             <div className="flex items-center gap-3">
-              <Rating value={Number(avgRating) || 0} fractions={2} readOnly />
+              <Rating value={reviewStats?.averageRating ?? 0} readOnly />
               <Text size="sm" c="dimmed">
-                {Number.isFinite(Number(avgRating))
-                  ? Number(avgRating).toFixed(1)
-                  : "—"}
+                {reviewsLoading
+                 ? "Betöltés..."
+                 : (reviewStats?.averageRating ?? 0).toFixed(1)}
               </Text>
+              <Button
+                size="xs"
+                variant="light"
+                onClick={() => setReviewsModalOpened(true)}
+                disabled={reviewsLoading}
+              >
+                Értékelések
+              </Button>
             </div>
 
             <div className="mt-2 flex gap-3">
@@ -249,12 +285,98 @@ export function ToolPage({ id }: { id: string }) {
                   )}
                 </>
               }
-              <Button
-                onClick={() => router.push(`/foglalas/${id}`)}
-                className="w-32"
+              {tool.user?.email !== user?.email && (
+                <Button
+                  onClick={() => router.push(`/foglalas/${id}`)}
+                  className="w-32"
+                >
+                  Foglalás
+                </Button>
+              )}
+
+              {}
+              <Modal
+                opened={reviewsModalOpened}
+                onClose={() => setReviewsModalOpened(false)}
+                title={`Értékelések — ${tool?.user?.firstName ?? ""} ${tool?.user?.lastName ?? ""}`}
+                size="lg"
+                centered
               >
-                Foglalás
-              </Button>
+                <Stack>
+                  <Group align="center">
+                    <Text fw={600}>Átlag:</Text>
+                    <Group align="center">
+                      <Rating readOnly value={reviewStats?.averageRating ?? 0} />
+                      <Text>{(reviewStats?.averageRating ?? 0).toFixed(1)}</Text>
+                    </Group>
+                  </Group>
+
+                  <Divider />
+
+                  <ScrollArea style={{ height: 360 }} type="auto">
+                    <Stack>
+                      <div>
+                        <Text fw={600}>Eladóként kapott értékelések</Text>
+                        {reviewsLoading ? (
+                          <Text c="dimmed">Betöltés...</Text>
+                        ) : reviewStats?.asOwner && reviewStats.asOwner.length > 0 ? (
+                          reviewStats.asOwner.map((r, idx) => (
+                            <Box
+                              key={`owner-${idx}`}
+                              p="xs"
+                              style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+                            >
+                              <Group align="flex-start">
+                                <Group align="center">
+                                  <Rating readOnly value={r.score ?? 0} />
+                                  <Text size="sm">{r.score}</Text>
+                                </Group>
+                                <Text size="sm" c="dimmed">
+                                  {r.comment ?? "-"}
+                                </Text>
+                              </Group>
+                            </Box>
+                          ))
+                        ) : (
+                              <Text c="dimmed" size="sm">
+                                Nincs értékelés eladóként.
+                              </Text>
+                            )}
+                      </div>
+
+                      <div>
+                        <Text fw={600}>Bérlőként kapott értékelések</Text>
+                        {reviewsLoading ? (
+                          <Text c="dimmed">Betöltés...</Text>
+                        ) : reviewStats?.asBorrower && reviewStats.asBorrower.length > 0 ? (
+                          reviewStats.asBorrower.map((r, idx) => (
+                            <Box
+                              key={`borrower-${idx}`}
+                              p="xs"
+                              style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+                            >
+                              <Group align="flex-start">
+                                <Group align="center">
+                                  <Rating readOnly value={r.score ?? 0} />
+                                  <Text size="sm">{r.score}</Text>
+                                </Group>
+                                <Text size="sm" c="dimmed">
+                                  {r.comment ?? "-"}
+                                </Text>
+                              </Group>
+                            </Box>
+                          ))
+                        ) : (
+                              <Text c="dimmed" size="sm">
+                                Nincs értékelés bérlőként.
+                              </Text>
+                            )}
+                      </div>
+                    </Stack>
+                  </ScrollArea>
+                </Stack>
+              </Modal>
+
             </div>
           </div>
         </div>

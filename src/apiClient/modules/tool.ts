@@ -16,3 +16,7 @@ export async function getToolById(id: string) {
 export async function deleteTool(id: string) {
   return await apiClient.delete(`/tools/${id}`);
 }
+
+export async function getReservationsForTool(id: string) {
+  return await apiClient.get(`/tools/${id}/reservation`);
+}
