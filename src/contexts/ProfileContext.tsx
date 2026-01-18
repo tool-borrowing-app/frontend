@@ -1,6 +1,8 @@
 "use client";
 
 import { fetchProfile } from "@/apiClient/modules/auth";
+import { fetchNotificationsWithParams } from "@/apiClient/modules/notifications";
+import { NotificationDto } from "@/apiClient/types/notification.types";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type UserProfile = {
@@ -14,17 +16,20 @@ type ProfileContextType = {
   user: UserProfile | undefined;
   loading: boolean;
   refresh: () => Promise<void>;
+  pendingCount: number;
 };
 
 const ProfileContext = createContext<ProfileContextType>({
   user: undefined,
   loading: true,
-  refresh: async () => {},
+  refresh: async () => { },
+  pendingCount: 0,
 });
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [pendingNotifications, setPendingNotifications] = useState<NotificationDto[]>([]);
 
   const refreshProfile = async () => {
     setLoading(true);
@@ -46,8 +51,23 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     refreshProfile();
   }, []);
 
+
+  useEffect(() => {
+    let timerId: NodeJS.Timeout;
+
+    const poll = async () => {
+      const res = await fetchNotificationsWithParams(false);
+      setPendingNotifications(res.data);
+      timerId = setTimeout(poll, 5000);
+    };
+
+    poll();
+
+    return () => clearTimeout(timerId);
+  }, []);
+
   return (
-    <ProfileContext.Provider value={{ user, loading, refresh: refreshProfile }}>
+    <ProfileContext.Provider value={{ user, loading, refresh: refreshProfile, pendingCount: pendingNotifications.length }}>
       {children}
     </ProfileContext.Provider>
   );
