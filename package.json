@@ -19,7 +19,7 @@
     "@tabler/icons-react": "^3.35.0",
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
-    "next": "^16.0.7",
+    "next": "^16.1.3",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tailwind-preset-mantine": "^2.1.0"
