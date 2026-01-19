@@ -89,6 +89,9 @@ export default function Page() {
   const [isReviewReadonly, setIsReviewReadonly] = useState(false);
   const [isSavingReview, setIsSavingReview] = useState(false);
 
+  const [openedViewModal, setOpenedViewModal] = useState(false);
+  const [viewReservation, setViewReservation] = useState<ReservationDto | null>(null);
+
   const fetchReservations = async () => {
     setLoading(true);
     try {
@@ -274,6 +277,10 @@ export default function Page() {
     setOpenedReviewModal(true);
   };
 
+  const openViewModal = (r: ReservationDto) => {
+    setViewReservation(r);
+    setOpenedViewModal(true);
+  };
 
   const saveReview = async () => {
     if (!currentReservation) return;
@@ -413,7 +420,13 @@ export default function Page() {
                        <Table.Td>{formatHuf(price)}</Table.Td>
                        <Table.Td>
                          <Group gap="md">
-                           <Anchor>Megtekintés</Anchor>
+                           <Anchor
+                             component="button"
+                             onClick={() => openViewModal(r)}
+                             style={{ cursor: "pointer" }}
+                           >
+                             Megtekintés
+                           </Anchor>
 
                            {isClosed && (
                              <Group gap={6} align="center">
@@ -504,6 +517,65 @@ export default function Page() {
             </Button>
           )}
         </Group>
+      </Modal>
+
+      {/* View Modal (readonly reservation details) */}
+      <Modal
+        opened={openedViewModal}
+        onClose={() => setOpenedViewModal(false)}
+        title={`Foglalás megtekintése: ${viewReservation?.toolDto?.name ?? ""}`}
+        centered
+      >
+        {viewReservation?.toolDto?.user ? (
+          <>
+            <Text mt="md" mb="xs" fw={600}>
+              Eszköztulajdonos adatai:
+            </Text>
+
+            <Paper withBorder p="sm" radius="md" mb="md">
+              <Text mb="xs">
+                <strong>Név:</strong>{" "}
+                {`${viewReservation.toolDto.user.firstName} ${viewReservation.toolDto.user.lastName}`}
+              </Text>
+
+              <Text mb="xs">
+                <strong>Email:</strong> {viewReservation.toolDto.user.email}
+              </Text>
+
+              {viewReservation?.borrower?.phoneNumber && (
+                <Text mb="xs">
+                  <strong>Telefonszám:</strong> {viewReservation?.borrower?.phoneNumber}
+                </Text>
+              )}
+
+              {viewReservation?.borrower?.postalCode && (
+                <Text mb="xs">
+                  <strong>Irányítószám:</strong> {viewReservation?.borrower?.postalCode}
+                </Text>
+              )}
+
+              {viewReservation?.borrower?.city && (
+                <Text mb="xs">
+                  <strong>Város:</strong> {viewReservation?.borrower?.city}
+                </Text>
+              )}
+
+              {viewReservation?.borrower?.streetAddress && (
+                <Text mb="xs">
+                  <strong>Cím:</strong> {viewReservation?.borrower?.streetAddress}
+                </Text>
+              )}
+            </Paper>
+
+            <Group mt="md" justify="end">
+              <Button variant="outline" onClick={() => setOpenedViewModal(false)}>
+                Bezárás
+              </Button>
+            </Group>
+          </>
+        ) : (
+           <Text>Nincs kiválasztott foglalás.</Text>
+         )}
       </Modal>
     </div>
   );
