@@ -28,7 +28,7 @@ import {
   Tooltip,
   Stack
 } from "@mantine/core";
-import { IconPencil, IconPlus, IconSearch, IconStar, IconTrash } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconSearch, IconStar, IconEye, IconTrash, IconMessageStar  } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
@@ -121,6 +121,9 @@ export default function Page() {
   const [rating, setRating] = useState<number | null>(null);
   const [comment, setComment] = useState<string>("");
   const [isRatingReadonly, setIsRatingReadonly] = useState(false);
+
+  const [openedViewModal, setOpenedViewModal] = useState(false);
+  const [viewReservation, setViewReservation] = useState<ReservationDto | null>(null);
 
   const fetchTools = async () => {
     if (!user?.id) return;
@@ -274,6 +277,11 @@ export default function Page() {
     } catch (err) {
       console.error("Hiba a mentésnél:", err);
     }
+  };
+
+  const openViewModal = (reservation: ReservationDto) => {
+    setViewReservation(reservation);
+    setOpenedViewModal(true);
   };
 
   return (
@@ -436,7 +444,14 @@ export default function Page() {
                                        <Table.Td><Badge color={statusBadgeColor(r.status?.name ?? "")}>{r.status?.name ?? "-"}</Badge></Table.Td>
                                        <Table.Td>
                                          <Group gap="md" wrap="nowrap">
-                                           <Anchor component="button" onClick={() => alert("Megtekintés")} style={{ cursor: "pointer" }}>Megtekintés</Anchor>
+                                           <Anchor
+                                             component="button"
+                                             onClick={() => openViewModal(r)}
+                                             style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                                           >
+                                             <IconEye size={14} />
+                                             Megtekintés
+                                           </Anchor>
 
                                            {}
                                            {r.status?.code === "FINISHED" ? (
@@ -447,7 +462,19 @@ export default function Page() {
                                                </Anchor>
                                              </Group>
                                            ) : (
-                                              <Button size="xs" variant="light" onClick={() => openBorrowerModal(r.borrower)}>Bérlő értékelései</Button>
+                                             <Anchor
+                                               component="button"
+                                               onClick={() => openBorrowerModal(r.borrower)}
+                                               style={{
+                                                 cursor: "pointer",
+                                                 display: "flex",
+                                                 alignItems: "center",
+                                                 gap: 4
+                                               }}
+                                             >
+                                               <IconMessageStar size={14} />
+                                               Bérlő értékelései
+                                             </Anchor>
                                             )}
                                          </Group>
                                        </Table.Td>
@@ -590,6 +617,72 @@ export default function Page() {
                            )}
                      </>
                    ) : null}
+                 </Modal>
+
+                 <Modal
+                   opened={openedViewModal}
+                   onClose={() => {
+                     setOpenedViewModal(false);
+                     setViewReservation(null);
+                   }}
+                   title="Foglalás megtekintése – Bérlő adatai"
+                   centered
+                 >
+                   {viewReservation?.borrower ? (
+                     <>
+                       <Text mt="md" mb="xs" fw={600}>
+                         Bérlő adatai
+                       </Text>
+
+                       <Paper withBorder p="sm" radius="md">
+                         <Text mb="xs">
+                           <strong>Név:</strong>{" "}
+                           {viewReservation.borrower.firstName}{" "}
+                           {viewReservation.borrower.lastName}
+                         </Text>
+
+                         <Text mb="xs">
+                           <strong>Email:</strong> {viewReservation.borrower.email}
+                         </Text>
+
+                         {(viewReservation.borrower as any)?.phoneNumber && (
+                           <Text mb="xs">
+                             <strong>Telefonszám:</strong>{" "}
+                             {(viewReservation.borrower as any).phoneNumber}
+                           </Text>
+                         )}
+
+                         {(viewReservation.borrower as any)?.postalCode && (
+                           <Text mb="xs">
+                             <strong>Irányítószám:</strong>{" "}
+                             {(viewReservation.borrower as any).postalCode}
+                           </Text>
+                         )}
+
+                         {(viewReservation.borrower as any)?.city && (
+                           <Text mb="xs">
+                             <strong>Város:</strong>{" "}
+                             {(viewReservation.borrower as any).city}
+                           </Text>
+                         )}
+
+                         {(viewReservation.borrower as any)?.streetAddress && (
+                           <Text mb="xs">
+                             <strong>Cím:</strong>{" "}
+                             {(viewReservation.borrower as any).streetAddress}
+                           </Text>
+                         )}
+                       </Paper>
+
+                       <Group mt="md" justify="end">
+                         <Button variant="outline" onClick={() => setOpenedViewModal(false)}>
+                           Bezárás
+                         </Button>
+                       </Group>
+                     </>
+                   ) : (
+                      <Text c="dimmed">Nincs kiválasztott foglalás.</Text>
+                    )}
                  </Modal>
 
                </Tabs.Panel>

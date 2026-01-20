@@ -7,6 +7,21 @@ export type CreateReservationDto = {
   borrowerUserId: number;
 };
 
+export type UserFullProfileDto = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  postalCode?: string;
+  city?: string;
+  streetAddress?: string;
+  toolIds?: number[];
+  renterConversationIds?: number[];
+  sentMessageIds?: number[];
+  notificationIds?: number[];
+};
+
 export type ReservationDto = {
   id: number;
   toolDto: ToolDto;
@@ -17,4 +32,5 @@ export type ReservationDto = {
   ownerComment: string;
   borrowerScore: number;
   borrowerComment: string;
+  user?: UserFullProfileDto | null;
 };
