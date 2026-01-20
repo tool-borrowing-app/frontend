@@ -32,5 +32,6 @@ export type ReservationDto = {
   ownerComment: string;
   borrowerScore: number;
   borrowerComment: string;
+  borrower?: UserFullProfileDto | null;
   user?: UserFullProfileDto | null;
 };
