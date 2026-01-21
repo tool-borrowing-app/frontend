@@ -88,7 +88,7 @@ export default function Page() {
               {...form.getInputProps("password")}
             />
 
-            <div className="flex justify-end">
+            {/* <div className="flex justify-end">
               <button
                 type="button"
                 className="text-sm underline text-blue-600"
@@ -99,7 +99,7 @@ export default function Page() {
               >
                 Elfelejtett jelszó
               </button>
-            </div>
+            </div> */}
 
             <div className="pt-2 flex justify-center">
               <Button type="submit" className="px-8">
